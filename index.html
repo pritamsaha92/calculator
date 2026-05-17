@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Salary & Surcharge Calculator</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #151f32;
+            --text-primary: #f1f5f9;
+            --text-secondary: #64748b;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --border-color: #22314d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 1100px;
+            padding: 35px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            background: rgba(11, 15, 25, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .ctc-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 14px;
+        }
+
+        .ctc-input-wrapper span {
+            color: var(--accent-green);
+            font-weight: 700;
+            margin-right: 6px;
+        }
+
+        input[type="number"] {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 800;
+            width: 140px;
+            outline: none;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 15px;
+            accent-color: var(--accent-blue);
+            cursor: pointer;
+        }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .breakdown-table th, .breakdown-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .breakdown-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+
+        .breakdown-table td:nth-child(2), .breakdown-table td:nth-child(3) {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .breakdown-table tr.highlight {
+            background-color: rgba(16, 185, 129, 0.12);
+            font-weight: 800;
+            color: var(--accent-green);
+            font-size: 1.05rem;
+        }
+
+        .breakdown-table tr.highlight td {
+            border-bottom: 2px solid var(--accent-green);
+            border-top: 2px solid var(--accent-green);
+        }
+
+        .chart-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background: rgba(11, 15, 25, 0.4);
+            border-radius: 16px;
+            padding: 30px 20px;
+            border: 1px solid var(--border-color);
+            height: 100%;
+        }
+
+        #chartCanvas {
+            max-width: 280px;
+            max-height: 280px;
+            margin-bottom: 30px;
+        }
+
+        .legend {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .legend-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        
+        .legend-val {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>In-Hand Salary Calculator</h1>
+        <p>Complete Surcharge, Marginal Relief, Cess, and 12% Component PF Rules</p>
+    </header>
+
+    <div class="layout">
+        <!-- Configuration & Metrics -->
+        <div>
+            <div class="input-group">
+                <div class="label-row">
+                    <label for="ctcInput">Annual Corporate CTC</label>
+                    <div class="ctc-input-wrapper">
+                        <span>₹</span>
+                        <input type="number" id="ctcInput" value="6500000" min="200000" max="20000000" step="100000">
+                    </div>
+                </div>
+                <input type="range" id="ctcSlider" min="200000" max="15000000" value="6500000" step="50000">
+            </div>
+
+            <table class="breakdown-table">
+                <thead>
+                    <tr>
+                        <th>Itemized Parameters</th>
+                        <th style="text-align: right;">Annual (₹)</th>
+                        <th style="text-align: right;">Monthly (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Gross Salary <small style="color:var(--text-secondary);">(CTC - Employer PF)</small></td>
+                        <td id="annualGross">0</td>
+                        <td id="monthlyGross">0</td>
+                    </tr>
+                    <tr>
+                        <td>Standard Deduction <small style="color:var(--text-secondary);">(Flat Exemption)</small></td>
+                        <td>75,000</td>
+                        <td>6,250</td>
+                    </tr>
+                    <tr style="background: rgba(255,255,255,0.02)">
+                        <td>Taxable Income Base <small style="color:var(--text-secondary);">(Gross - 75K)</small></td>
+                        <td id="annualTaxable" style="font-weight:600;">0</td>
+                        <td id="monthlyTaxable" style="font-weight:600;">0</td>
+                    </tr>
+                    <tr>
+                        <td>Employer PF Contribution <small style="color:var(--text-secondary);">(12% of Basic)</small></td>
+                        <td id="annualEmployerPf">0</td>
+                        <td id="monthlyEmployerPf">0</td>
+                    </tr>
+                    <tr>
+                        <td>Employee PF Deduction <small style="color:var(--text-secondary);">(12% of Basic)</small></td>
+                        <td id="annualEmployeePf">0</td>
+                        <td id="monthlyEmployeePf">0</td>
+                    </tr>
+                    <tr>
+                        <td>Base Income Tax <small style="color:var(--text-secondary);">(New Progressive Slabs)</small></td>
+                        <td id="annualBaseTax">0</td>
+                        <td id="monthlyBaseTax">0</td>
+                    </tr>
+                    <tr>
+                        <td>Surcharge <small style="color:var(--text-secondary);" id="surchargeLabel">(>50L Bracket)</small></td>
+                        <td id="annualSurcharge" style="color: var(--accent-purple);">0</td>
+                        <td id="monthlySurcharge" style="color: var(--accent-purple);">0</td>
+                    </tr>
+                    <tr>
+                        <td>Health & Education Cess <small style="color:var(--text-secondary);">(4% on Tax+Surch.)</small></td>
+                        <td id="annualCess" style="color: var(--accent-amber);">0</td>
+                        <td id="monthlyCess" style="color: var(--accent-amber);">0</td>
+                    </tr>
+                    <tr class="highlight">
+                        <td>Net Take-Home (In-Hand)</td>
+                        <td id="annualInHand">0</td>
+                        <td id="monthlyInHand">0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visual Analytics Side -->
+        <div class="chart-panel">
+            <canvas id="chartCanvas" width="300" height="300"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-left">
+                        <div class="color-dot" style="background-color: var(--accent-green);"></div>
+                        <span>Net Take-Home</span>
+                    </div>
+                    <span class="legend-val" id="legInHand">₹0</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-left">
+                        <div class="color-dot" style="background-color: var(--accent-red);"></div>
+                        <span>Total Gov Tax</span>
+                    </div>
+                    <span class="legend-val" id="legTax" style="color: var(--accent-red);">₹0</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-left">
+                        <div class="color-dot" style="background-color: var(--accent-blue);"></div>
+                        <span>Employee PF Contribution</span>
+                    </div>
+                    <span class="legend-val" id="legEmpPf">₹0</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-left">
+                        <div class="color-dot" style="background-color: var(--accent-amber);"></div>
+                        <span>Employer PF Component</span>
+                    </div>
+                    <span class="legend-val" id="legEmpyrPf">₹0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctcInput = document.getElementById('ctcInput');
+    const ctcSlider = document.getElementById('ctcSlider');
+    const canvas = document.getElementById('chartCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const elements = {
+        annualGross: document.getElementById('annualGross'),
+        monthlyGross: document.getElementById('monthlyGross'),
+        annualTaxable: document.getElementById('annualTaxable'),
+        monthlyTaxable: document.getElementById('monthlyTaxable'),
+        annualEmployerPf: document.getElementById('annualEmployerPf'),
+        monthlyEmployerPf: document.getElementById('monthlyEmployerPf'),
+        annualEmployeePf: document.getElementById('annualEmployeePf'),
+        monthlyEmployeePf: document.getElementById('monthlyEmployeePf'),
+        annualBaseTax: document.getElementById('annualBaseTax'),
+        monthlyBaseTax: document.getElementById('monthlyBaseTax'),
+        surchargeLabel: document.getElementById('surchargeLabel'),
+        annualSurcharge: document.getElementById('annualSurcharge'),
+        monthlySurcharge: document.getElementById('monthlySurcharge'),
+        annualCess: document.getElementById('annualCess'),
+        monthlyCess: document.getElementById('monthlyCess'),
+        annualInHand: document.getElementById('annualInHand'),
+        monthlyInHand: document.getElementById('monthlyInHand'),
+        legInHand: document.getElementById('legInHand'),
+        legTax: document.getElementById('legTax'),
+        legEmpPf: document.getElementById('legEmpPf'),
+        legEmpyrPf: document.getElementById('legEmpyrPf')
+    };
+
+    function formatCurrency(val) {
+        return Math.round(val).toLocaleString('en-IN');
+    }
+
+    // Evaluates Progressive New Tax Regime base parameters
+    function getBaseTax(income) {
+        let tax = 0;
+        if (income > 2400000) {
+            tax += (income - 2400000) * 0.30;
+            tax += 300000; // Cumulative tax block summation below 24L
+        } else if (income > 2000000) {
+            tax += (income - 2000000) * 0.25;
+            tax += 200000;
+        } else if (income > 1600000) {
+            tax += (income - 1600000) * 0.20;
+            tax += 120000;
+        } else if (income > 1200000) {
+            tax += (income - 1200000) * 0.15;
+            tax += 60000;
+        } else if (income > 800000) {
+            tax += (income - 800000) * 0.10;
+            tax += 20000;
+        } else if (income > 400000) {
+            tax += (income - 400000) * 0.05;
+        }
+        return tax;
+    }
+
+    function calculateDeepTax(taxableIncome) {
+        if (taxableIncome <= 1200000) {
+            return { baseTax: 0, surcharge: 0, cess: 0, totalTax: 0, rateLabel: "0%" };
+        }
+
+        let baseTax = getBaseTax(taxableIncome);
+
+        // Section 87A Marginal Tax Protection Rule near 12 Lakh limit
+        if (taxableIncome <= 1350000) {
+            let excessOver12L = taxableIncome - 1200000;
+            if (baseTax > excessOver12L) {
+                baseTax = excessOver12L;
+            }
+        }
+
+        // Determine Surcharge Tiers for the New Tax Regime
+        let surchargeRate = 0;
+        let limitBoundary = 0;
+        let rateLabel = "0%";
+
+        if (taxableIncome > 50000000) { // > 5 Crore
+            surchargeRate = 0.25; // New Regime caps max surcharge at 25%
+            limitBoundary = 50000000;
+            rateLabel = "25%";
+        } else if (taxableIncome > 20000000) { // > 2 Crore
+            surchargeRate = 0.25;
+            limitBoundary = 20000000;
+            rateLabel = "25%";
+        } else if (taxableIncome > 10000000) { // > 1 Crore
+            surchargeRate = 0.15;
+            limitBoundary = 10000000;
+            rateLabel = "15%";
+        } else if (taxableIncome > 5000000) { // > 50 Lakhs
+            surchargeRate = 0.10;
+            limitBoundary = 5000000;
+            rateLabel = "10%";
+        }
+
+        let surcharge = baseTax * surchargeRate;
+        let taxBeforeCess = baseTax + surcharge;
+
+        // Apply Surcharge Marginal Relief logic
+        if (limitBoundary > 0) {
+            let baseTaxAtLimit = getBaseTax(limitBoundary);
+            let surchargeRateAtLimit = 0;
+            
+            if (limitBoundary === 50000000) surchargeRateAtLimit = 0.25;
+            else if (limitBoundary === 20000000) surchargeRateAtLimit = 0.15;
+            else if (limitBoundary === 10000000) surchargeRateAtLimit = 0.10;
+
+            let totalTaxAtLimitBeforeCess = baseTaxAtLimit + (baseTaxAtLimit * surchargeRateAtLimit);
+            let excessIncomeOverLimit = taxableIncome - limitBoundary;
+            
+            let maxTaxAllowedBeforeCess = totalTaxAtLimitBeforeCess + excessIncomeOverLimit;
+
+            if (taxBeforeCess > maxTaxAllowedBeforeCess) {
+                taxBeforeCess = maxTaxAllowedBeforeCess;
+                surcharge = Math.max(0, taxBeforeCess - baseTax);
+                rateLabel = "Relief Applied";
+            }
+        }
+
+        let cess = taxBeforeCess * 0.04;
+        let totalTax = taxBeforeCess + cess;
+
+        return { baseTax, surcharge, cess, totalTax, rateLabel };
+    }
+
+    function processCalculations() {
+        const ctc = parseFloat(ctcInput.value) || 0;
+
+        const basicSalary = ctc * 0.50; // Benchmarked baseline component ratio
+        const employerPF = basicSalary * 0.12;
+        const employeePF = basicSalary * 0.12;
+        const grossSalary = ctc - employerPF;
+        
+        const standardDeduction = 75000;
+        const taxableIncome = Math.max(0, grossSalary - standardDeduction);
+
+        const taxMetrics = calculateDeepTax(taxableIncome);
+
+        const netInHandAnnual = grossSalary - employeePF - taxMetrics.totalTax;
+
+        // DOM Synchronization
+        elements.annualGross.innerText = formatCurrency(grossSalary);
+        elements.monthlyGross.innerText = formatCurrency(grossSalary / 12);
+        
+        elements.annualTaxable.innerText = formatCurrency(taxableIncome);
+        elements.monthlyTaxable.innerText = formatCurrency(taxableIncome / 12);
+
+        elements.annualEmployerPf.innerText = formatCurrency(employerPF);
+        elements.monthlyEmployerPf.innerText = formatCurrency(employerPF / 12);
+        
+        elements.annualEmployeePf.innerText = formatCurrency(employeePF);
+        elements.monthlyEmployeePf.innerText = formatCurrency(employeePF / 12);
+
+        elements.annualBaseTax.innerText = formatCurrency(taxMetrics.baseTax);
+        elements.monthlyBaseTax.innerText = formatCurrency(taxMetrics.baseTax / 12);
+
+        elements.surchargeLabel.innerText = `(${taxMetrics.rateLabel})`;
+        elements.annualSurcharge.innerText = formatCurrency(taxMetrics.surcharge);
+        elements.monthlySurcharge.innerText = formatCurrency(taxMetrics.surcharge / 12);
+
+        elements.annualCess.innerText = formatCurrency(taxMetrics.cess);
+        elements.monthlyCess.innerText = formatCurrency(taxMetrics.cess / 12);
+
+        elements.annualInHand.innerText = formatCurrency(netInHandAnnual);
+        elements.monthlyInHand.innerText = formatCurrency(netInHandAnnual / 12);
+
+        // Update Dashboard Sidebar Panel Elements
+        elements.legInHand.innerText = "₹" + formatCurrency(netInHandAnnual / 12) + "/mo";
+        elements.legTax.innerText = "₹" + formatCurrency(taxMetrics.totalTax / 12) + "/mo";
+        elements.legEmpPf.innerText = "₹" + formatCurrency(employeePF / 12) + "/mo";
+        elements.legEmpyrPf.innerText = "₹" + formatCurrency(employerPF / 12) + "/mo";
+
+        renderDoughnut(netInHandAnnual, taxMetrics.totalTax, employeePF, employerPF);
+    }
+
+    function renderDoughnut(inHand, tax, empPf, empyrPf) {
+        const total = inHand + tax + empPf + empyrPf;
+        const segments = [
+            { value: inHand, color: '#10b981' },
+            { value: tax, color: '#ef4444' },
+            { value: empPf, color: '#3b82f6' },
+            { value: empyrPf, color: '#f59e0b' }
+        ];
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.min(centerX, centerY) * 0.88;
+        const innerRadius = radius * 0.68;
+
+        let startAngle = -Math.PI / 2;
+
+        segments.forEach(seg => {
+            if (seg.value <= 0 || total === 0) return;
+            const segAngle = (seg.value / total) * 2 * Math.PI;
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, startAngle, startAngle + segAngle);
+            ctx.arc(centerX, centerY, innerRadius, startAngle + segAngle, startAngle, true);
+            ctx.closePath();
+            ctx.fillStyle = seg.color;
+            ctx.fill();
+
+            startAngle += segAngle;
+        });
+
+        // Center Infographics
+        ctx.fillStyle = '#64748b';
+        ctx.font = '500 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('MONTHLY IN-HAND', centerX, centerY - 14);
+
+        ctx.fillStyle = '#10b981';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText('₹' + formatCurrency(inHand / 12), centerX, centerY + 12);
+    }
+
+    ctcInput.addEventListener('input', () => {
+        ctcSlider.value = ctcInput.value;
+        processCalculations();
+    });
+
+    ctcSlider.addEventListener('input', () => {
+        ctcInput.value = ctcSlider.value;
+        processCalculations();
+    });
+
+    processCalculations();
+</script>
+
+</body>
+</html>
