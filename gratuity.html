@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descriptive Gratuity Calculator</title>
+    <style>
+        :root {
+            --bg-app: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent-color: #4f46e5;
+            --accent-light: #e0e7ff;
+            --success-color: #16a34a;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
+            --transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-app: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #818cf8;
+            --accent-light: #1e1b4b;
+            --success-color: #22c55e;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 2rem 1rem;
+            transition: var(--transition);
+            overflow-y: auto; /* Ensures pristine scrolling behaviors */
+        }
+
+        .calculator-container {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        @media (max-width: 900px) {
+            .calculator-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Form Inputs Panel */
+        .input-panel {
+            padding: 2.5rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 900px) {
+            .input-panel {
+                padding: 1.5rem;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .theme-toggle {
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.6rem;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            opacity: 0.9;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input[data-prefixed="true"] {
+            padding-left: 2.2rem;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* Custom Selector Tabs */
+        .radio-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--bg-app);
+            padding: 0.3rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            gap: 0.25rem;
+        }
+
+        .radio-tab-item {
+            position: relative;
+        }
+
+        .radio-tab-item input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .radio-tab-label {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.65rem;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .radio-tab-item input[type="radio"]:checked + .radio-tab-label {
+            background: var(--bg-card);
+            color: var(--accent-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Breakdown Output Panel */
+        .result-panel {
+            padding: 2.5rem;
+            background-color: rgba(79, 70, 229, 0.02);
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (max-width: 900px) {
+            .result-panel {
+                padding: 1.5rem;
+            }
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .main-amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--success-color);
+            margin-top: 0.25rem;
+        }
+
+        .explanation-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.25rem;
+            margin-top: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .explanation-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--text-secondary);
+        }
+
+        .step-item {
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+            padding-left: 1.25rem;
+            position: relative;
+        }
+
+        .step-item::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .formula-highlight {
+            font-family: monospace;
+            background: var(--bg-app);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: var(--transition);
+        }
+
+        .info-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-container">
+    
+    <!-- Inputs -->
+    <div class="input-panel">
+        <div class="header-section">
+            <h1>Gratuity Setup</h1>
+            <button class="theme-toggle" id="themeToggleBtn" type="button" aria-label="Toggle Theme">
+                <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
+        </div>
+
+        <form id="gratuityForm">
+            <div class="form-group">
+                <label>Company Rules Eligibility</label>
+                <div class="radio-tabs">
+                    <div class="radio-tab-item">
+                        <input type="radio" id="covered" name="coverage" value="covered" checked>
+                        <label for="covered" class="radio-tab-label">Covered by Act</label>
+                    </div>
+                    <div class="radio-tab-item">
+                        <input type="radio" id="notCovered" name="coverage" value="notCovered">
+                        <label for="notCovered" class="radio-tab-label">Not Covered</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="salary">Last Drawn Base Salary (Basic + DA)</label>
+                <div class="input-wrapper">
+                    <span class="input-prefix">₹</span>
+                    <input type="number" id="salary" min="0" placeholder="Enter amount" data-prefixed="true" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="years">Years Worked</label>
+                    <input type="number" id="years" min="0" placeholder="e.g. 5" required>
+                </div>
+                <div class="form-group">
+                    <label for="months">Extra Months</label>
+                    <input type="number" id="months" min="0" max="11" placeholder="0-11" value="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="taxLimit">Govt Tax-Free Cap</label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="taxLimit" value="2000000" data-prefixed="true">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="roundMethod">Tenure Rounding Method</label>
+                    <select id="roundMethod">
+                        <option value="auto">Standard Legal Rounding</option>
+                        <option value="completed">Ignore Excess Months</option>
+                        <option value="exact">Exact Fractional Year</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Descriptive Calculations Display -->
+    <div class="result-panel">
+        <div class="result-card">
+            <label style="text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">Your Estimated Payout</label>
+            <div class="main-amount" id="displayGratuity">₹0</div>
+        </div>
+
+        <div class="explanation-box">
+            <div class="explanation-title">How It's Calculated Step-by-Step</div>
+            <div id="stepTenure" class="step-item">Processing tenure...</div>
+            <div id="stepFormula" class="step-item">Evaluating formula structure...</div>
+            <div id="stepMath" class="step-item">Awaiting fields...</div>
+            <div id="stepTax" class="step-item">Calculating tax parameters...</div>
+        </div>
+
+        <div class="info-footer">
+            Note: Gratuity payout is traditionally mandatory once an individual completes 5 continuous years of employment within an eligible establishment.
+        </div>
+    </div>
+</div>
+
+<script>
+    const htmlEl = document.documentElement;
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const inputs = document.querySelectorAll('#gratuityForm input, #gratuityForm select');
+
+    const sunIcon = `<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>`;
+    const moonIcon = `<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>`;
+
+    // 1. Fixed LocalStorage Theme Management
+    function initTheme() {
+        const savedTheme = localStorage.getItem('gratuity-theme') || 'light';
+        htmlEl.setAttribute('data-theme', savedTheme);
+        themeIcon.innerHTML = savedTheme === 'dark' ? sunIcon : moonIcon;
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        const activeTheme = htmlEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        htmlEl.setAttribute('data-theme', activeTheme);
+        localStorage.setItem('gratuity-theme', activeTheme);
+        themeIcon.innerHTML = activeTheme === 'dark' ? sunIcon : moonIcon;
+    });
+
+    // 2. Core Operational Engine
+    function compute() {
+        const coverageEl = document.querySelector('input[name="coverage"]:checked');
+        const coverage = coverageEl ? coverageEl.value : 'covered';
+        
+        const salary = parseFloat(document.getElementById('salary').value) || 0;
+        const years = parseInt(document.getElementById('years').value) || 0;
+        const months = parseInt(document.getElementById('months').value) || 0;
+        const taxLimit = parseFloat(document.getElementById('taxLimit').value) || 2000000;
+        const roundMethod = document.getElementById('roundMethod').value;
+
+        // Step A: Tenure Calculations
+        let effectiveYears = years;
+        let tenureExplanation = "";
+
+        if (roundMethod === 'auto') {
+            if (coverage === 'covered') {
+                if (months > 6) {
+                    effectiveYears = years + 1;
+                    tenureExplanation = `Your tenure of <strong>${years} yrs, ${months} mos</strong> is rounded up to <strong>${effectiveYears} years</strong> because the fractional year exceeds 6 months under Act rules.`;
+                } else {
+                    effectiveYears = years;
+                    tenureExplanation = `Your tenure is evaluated as <strong>${effectiveYears} years</strong>. The remaining ${months} months are dropped since they do not exceed the 6-month rounding threshold.`;
+                }
+            } else {
+                effectiveYears = years;
+                tenureExplanation = `For establishments not covered by the Act, standard practice excludes fractions: evaluated at <strong>${effectiveYears} completed years</strong>.`;
+            }
+        } else if (roundMethod === 'completed') {
+            effectiveYears = years;
+            tenureExplanation = `Using a completed years rule: excess fractional months are completely omitted. Total evaluated: <strong>${effectiveYears} years</strong>.`;
+        } else if (roundMethod === 'exact') {
+            effectiveYears = years + (months / 12);
+            tenureExplanation = `Using exact fractional math: <strong>${years} years and ${months} months</strong> calculates explicitly as <strong>${effectiveYears.toFixed(3)} years</strong>.`;
+        }
+
+        document.getElementById('stepTenure').innerHTML = tenureExplanation;
+
+        // Step B: Formula Implementations
+        let formulaStr = "";
+        let finalGratuity = 0;
+
+        if (coverage === 'covered') {
+            formulaStr = "Per the Payment of Gratuity Act, the layout uses: <span class='formula-highlight'>(15 / 26) × Salary × Tenure</span> (where 26 isolates standard working days).";
+            finalGratuity = (15 / 26) * salary * effectiveYears;
+        } else {
+            formulaStr = "Without Act coverage, calculations default to a standard half-month calendar framework: <span class='formula-highlight'>(15 / 30) × Salary × Tenure</span>.";
+            finalGratuity = (15 / 30) * salary * effectiveYears;
+        }
+        document.getElementById('stepFormula').innerHTML = formulaStr;
+
+        // Step C: Numerical Execution
+        finalGratuity = Math.max(0, Math.round(finalGratuity));
+        document.getElementById('displayGratuity').innerText = formatValue(finalGratuity);
+
+        const mathText = salary > 0 && effectiveYears > 0 
+            ? `Mathematical trace: <br><strong>(15 / ${coverage === 'covered' ? '26' : '30'}) × ${formatValue(salary)} × ${effectiveYears.toFixed(2).replace('.00','')} years = ${formatValue(finalGratuity)}</strong>`
+            : "Enter your salary and tenure metrics on the left to see the calculation breakdown.";
+        document.getElementById('stepMath').innerHTML = mathText;
+
+        // Step D: Fixed Tax Computations
+        const exempt = Math.min(finalGratuity, taxLimit);
+        const netTaxable = Math.max(0, finalGratuity - exempt);
+
+        let taxText = "";
+        if (finalGratuity === 0) {
+            taxText = "Awaiting configuration inputs to verify threshold exemptions.";
+        } else if (netTaxable > 0) {
+            taxText = `Out of ${formatValue(finalGratuity)}, <strong style='color:var(--success-color)'>${formatValue(exempt)} is Tax-Exempt</strong> under law. The surplus balance of <strong style='color:#ef4444'>${formatValue(netTaxable)} is Taxable</strong> based on your financial slab.`;
+        } else {
+            taxText = `Your calculated total of <strong>${formatValue(finalGratuity)}</strong> fits clean within the max tax-free cap of ${formatValue(taxLimit)}. <strong style='color:var(--success-color)'>100% Tax-Exempt</strong>.`;
+        }
+        document.getElementById('stepTax').innerHTML = taxText;
+
+        // 3. Robust LocalStorage Data Syncer
+        localStorage.setItem('gratuity-form-data', JSON.stringify({
+            coverage, salary, years, months, taxLimit, roundMethod
+        }));
+    }
+
+    function formatValue(num) {
+        return '₹' + new Intl.NumberFormat('en-IN').format(num);
+    }
+
+    // 4. Fixed State Hydration
+    function loadSavedState() {
+        const cachedData = localStorage.getItem('gratuity-form-data');
+        if (!cachedData) return;
+        try {
+            const state = JSON.parse(cachedData);
+            if (state.coverage) {
+                const radioTarget = document.querySelector(`input[name="coverage"][value="${state.coverage}"]`);
+                if (radioTarget) radioTarget.checked = true;
+            }
+            if (state.salary) document.getElementById('salary').value = state.salary;
+            if (state.years) document.getElementById('years').value = state.years;
+            if (state.months) document.getElementById('months').value = state.months;
+            if (state.taxLimit) document.getElementById('taxLimit').value = state.taxLimit;
+            if (state.roundMethod) document.getElementById('roundMethod').value = state.roundMethod;
+        } catch (err) {
+            console.error("Failed to rehydrate local storage state trees.", err);
+        }
+    }
+
+    // Event Wireframe Handlers
+    inputs.forEach(el => {
+        el.addEventListener('input', compute);
+        el.addEventListener('change', compute);
+    });
+    document.querySelectorAll('input[name="coverage"]').forEach(radio => {
+        radio.addEventListener('change', compute);
+    });
+
+    // Bootstrapping Strategy
+    window.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        loadSavedState();
+        compute(); // Runs calculation cleanly using valid states
+    });
+</script>
+</body>
+</html>

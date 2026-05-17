@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Child Growth & Milestone Co-Pilot</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.js"></script>
+    <style>
+        :root {
+            --bg-base: #f1f5f9;
+            --bg-surface: #ffffff;
+            --border-color: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: rgba(79, 70, 229, 0.06);
+            --accent: #0ea5e9;
+            
+            --boy-color: #0284c7;
+            --boy-bg: rgba(2, 132, 199, 0.06);
+            --boy-border: #bae6fd;
+            --girl-color: #db2777;
+            --girl-bg: rgba(219, 39, 119, 0.06);
+            --girl-border: #fbcfe8;
+            
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+            --radius: 14px;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        }
+        
+        body { 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
+            padding: 1.5rem; 
+            line-height: 1.5; 
+            overflow-x: hidden;
+        }
+
+        #appLoaderOverlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(241, 245, 249, 0.7); backdrop-filter: blur(4px);
+            z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 1; transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        #appLoaderOverlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .spinner { width: 45px; height: 45px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; margin-bottom: 0.5rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .container { 
+            max-width: 1440px; 
+            margin: 0 auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1.5rem; 
+            width: 100%;
+        }
+        
+        header {
+            background: var(--bg-surface); padding: 1.25rem 1.5rem; border-radius: var(--radius);
+            box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 1rem;
+        }
+        .brand-block h1 { font-size: 1.5rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.01em; }
+        .brand-block p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .lang-selector-wrapper {
+            position: relative;
+        }
+
+        .lang-select {
+            padding: 0.5rem 2rem 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.15s ease;
+        }
+
+        .lang-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .lang-selector-wrapper::after {
+            content: "▼";
+            font-size: 0.65rem;
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: 360px 1fr; 
+            gap: 1.5rem; 
+            width: 100%;
+        }
+        
+        @media (max-width: 1024px) { 
+            .dashboard-grid { grid-template-columns: 1fr; } 
+        }
+
+        .card { background: var(--bg-surface); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border-color); width: 100%; }
+        h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+
+        .gender-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
+        .gender-btn {
+            padding: 0.75rem; border: 2px solid var(--border-color); background: var(--bg-surface);
+            border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.95rem;
+            display: flex; justify-content: center; align-items: center; gap: 0.4rem; transition: all 0.2s ease;
+        }
+        .gender-btn[data-gender="boy"].active { border-color: var(--boy-color); background: var(--boy-bg); color: var(--boy-color); }
+        .gender-btn[data-gender="girl"].active { border-color: var(--girl-color); background: var(--girl-bg); color: var(--girl-color); }
+        
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        input[type="date"], input[type="number"], select {
+            width: 100%; padding: 0.7rem 0.9rem; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.95rem; color: var(--text-main); transition: all 0.15s ease;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        
+        .input-with-unit { position: relative; }
+        .input-with-unit select { position: absolute; right: 3px; top: 3px; width: 75px; height: calc(100% - 8px); border: none; background: #e2e8f0; border-radius: 6px; padding: 0 0.4rem; font-weight: 600; font-size: 0.85rem; }
+
+        .baby-avatar-container {
+            background: var(--boy-bg); border-radius: 12px; padding: 1rem; text-align: center;
+            margin-bottom: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+            border: 1px dashed var(--boy-color); transition: all 0.25s ease;
+        }
+        .baby-avatar-icon { font-size: 2.5rem; }
+        .baby-avatar-name { font-size: 1.05rem; font-weight: 800; color: var(--boy-color); }
+
+        .workspace-layout { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; min-width: 0; }
+
+        .metrics-summary-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; width: 100%; }
+        @media (max-width: 768px) { .metrics-summary-strip { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 480px) { .metrics-summary-strip { grid-template-columns: 1fr; } }
+        
+        .metric-block-item {
+            background: var(--bg-surface); padding: 1rem; border-radius: 12px;
+            border: 1px solid #e2e8f0; box-shadow: var(--shadow); position: relative;
+        }
+        .metric-block-item p { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .metric-block-item h3 { font-size: 1.3rem; font-weight: 800; margin-top: 0.15rem; color: var(--text-main); white-space: nowrap; }
+        .metric-badge { position: absolute; top: 0.75rem; right: 0.75rem; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; }
+
+        .biometric-segment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; width: 100%; }
+        @media (max-width: 950px) { .biometric-segment-grid { grid-template-columns: 1fr; } }
+
+        .segment-panel-card {
+            background: var(--bg-surface); border-radius: var(--radius); padding: 1.25rem;
+            box-shadow: var(--shadow); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 1rem; min-width: 0;
+        }
+        .segment-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; gap: 0.5rem; }
+        .segment-title { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 0.3rem; }
+        
+        .percentile-score-badge { text-align: right; }
+        .percentile-score-badge h4 { font-size: 1.5rem; font-weight: 900; color: var(--primary); line-height: 1; }
+        .percentile-score-badge span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+        .status-pill { display: inline-flex; align-items: center; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700; gap: 0.25rem; width: fit-content; }
+        .status-pill.normal { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .status-pill.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .status-pill.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        .verdict-info-card { background: #f8fafc; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.85rem; border-left: 4px solid var(--primary); }
+        .verdict-info-card strong { display: block; margin-bottom: 0.15rem; color: var(--text-main); }
+        .verdict-info-card p { color: var(--text-muted); line-height: 1.4; }
+
+        .intervention-box { background: rgba(239, 68, 68, 0.02); border: 1px dashed rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.825rem; display: none; }
+        .intervention-box h5 { color: var(--danger); font-weight: 700; margin-bottom: 0.15rem; }
+
+        .chart-frame-wrapper { height: 250px; position: relative; width: 100%; margin-top: 0.25rem; }
+
+        .milestone-track { 
+            display: flex; gap: 1rem; overflow-x: auto; padding: 0.25rem 0 0.75rem 0; 
+            scroll-behavior: smooth; width: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+        .milestone-card { flex: 0 0 280px; background: #f8fafc; border-radius: 10px; padding: 1rem; border: 2px solid transparent; transition: all 0.2s ease; }
+        .milestone-card.active { background: var(--bg-surface); border-color: var(--primary); box-shadow: var(--shadow); }
+        .milestone-age { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--primary); background: var(--primary-light); padding: 0.15rem 0.5rem; border-radius: 4px; display: inline-block; }
+        .milestone-card h4 { font-size: 0.95rem; margin: 0.5rem 0 0.35rem 0; font-weight: 700; }
+        .milestone-card ul { font-size: 0.8rem; padding-left: 1rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.25rem; }
+    </style>
+</head>
+<body>
+
+<div id="appLoaderOverlay">
+    <div class="spinner"></div>
+    <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);" data-i18n="loaderTitle">IAP Child Growth Tracker</div>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;" data-i18n="loaderSubtitle">Mapping reference vectors safely...</div>
+</div>
+
+<div class="container">
+    <header>
+        <div class="brand-block">
+            <h1 data-i18n="appTitle">Indian Child Growth & Milestone Co-Pilot</h1>
+            <p data-i18n="appSubtitle">Comprehensive biological evaluation suite calibrated accurately against IAP standard parameters.</p>
+        </div>
+        <div class="header-controls">
+            <div class="lang-selector-wrapper">
+                <select id="langSelect" class="lang-select">
+                    <option value="en">English</option>
+                    <option value="hi">हिन्दी (Hindi)</option>
+                    <option value="bn">বাংলা (Bengali)</option>
+                    <option value="mr">मराठी (Marathi)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="gu">ગુજરાતી (Gujarati)</option>
+                    <option value="ur">اردو (Urdu)</option>
+                    <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                    <option value="or">ଓଡ଼ିଆ (Odia)</option>
+                    <option value="ml">മലയാളം (Malayalam)</option>
+                </select>
+            </div>
+            <div style="font-size: 1.6rem;">🇮🇳</div>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h2>⚙️ <span data-i18n="engineTitle">Data Intake Engine</span></h2>
+            
+            <div class="form-group">
+                <label data-i18n="lblGender">Biological Gender</label>
+                <div class="gender-selector">
+                    <button type="button" class="gender-btn active" data-gender="boy">👦 <span data-i18n="btnBoy">Boy</span></button>
+                    <button type="button" class="gender-btn" data-gender="girl">👧 <span data-i18n="btnGirl">Girl</span></button>
+                </div>
+            </div>
+
+            <div class="baby-avatar-container" id="avatarDisplayBox">
+                <div class="baby-avatar-icon" id="avatarIcon">👦</div>
+                <div class="baby-avatar-name" id="avatarLabel" data-i18n="profileBoy">Baby Boy Profile</div>
+            </div>
+
+            <div class="form-group">
+                <label for="dobInput" data-i18n="lblDob">Date of Birth</label>
+                <input type="date" id="dobInput" value="2024-06-15">
+            </div>
+
+            <div class="form-group">
+                <label for="heightInput" data-i18n="lblHeight">Current Height/Length</label>
+                <div class="input-with-unit">
+                    <input type="number" id="heightInput" value="82.5" step="0.1">
+                    <select id="heightUnit">
+                        <option value="cm">cm</option>
+                        <option value="inch">inch</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="weightInput" data-i18n="lblWeight">Current Weight (kg)</label>
+                <input type="number" id="weightInput" value="11.4" step="0.1">
+            </div>
+        </div>
+
+        <div class="workspace-layout">
+            <div class="metrics-summary-strip">
+                <div class="metric-block-item">
+                    <p data-i18n="cardAge">Calculated Age</p>
+                    <h3 id="txtSummaryAge">0 Mos</h3>
+                </div>
+                <div class="metric-block-item">
+                    <p data-i18n="cardHeight">Standardized Height</p>
+                    <h3 id="txtSummaryHeight" style="color: var(--primary);">0 cm</h3>
+                </div>
+                <div class="metric-block-item">
+                    <p data-i18n="cardWeight">Standardized Weight</p>
+                    <h3 id="txtSummaryWeight" style="color: var(--boy-color);">0 kg</h3>
+                </div>
+                <div class="metric-block-item">
+                    <p data-i18n="cardBmi">Body Mass Index (BMI)</p>
+                    <h3 id="txtSummaryBMI">0.0</h3>
+                    <span class="metric-badge" id="badgeBMICategory" style="background:#e2e8f0;">Normal</span>
+                </div>
+            </div>
+
+            <div class="biometric-segment-grid">
+                <div class="segment-panel-card">
+                    <div class="segment-header">
+                        <div class="segment-title">📏 <span data-i18n="analyticsHeight">Height Analytics</span></div>
+                        <div class="percentile-score-badge">
+                            <h4 id="lblHeightPercentile">50th</h4>
+                            <span data-i18n="lblPercentile">Percentile</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="status-pill normal" id="pillHeightStatus">Normal Growth</span>
+                    </div>
+                    <div class="verdict-info-card">
+                        <strong data-i18n="lblVerdict">Clinical Assessment Verdict</strong>
+                        <p id="txtHeightVerdict">Calculating indicators...</p>
+                    </div>
+                    <div class="intervention-box" id="boxHeightIntervention">
+                        <h5 data-i18n="lblAdvisory">⚠️ Pediatric Advisory Protocol</h5>
+                        <p id="txtHeightIntervention"></p>
+                    </div>
+                    <div class="chart-frame-wrapper">
+                        <canvas id="heightDedicatedChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="segment-panel-card">
+                    <div class="segment-header">
+                        <div class="segment-title">⚖️ <span data-i18n="analyticsWeight">Weight Analytics</span></div>
+                        <div class="percentile-score-badge">
+                            <h4 id="lblWeightPercentile">50th</h4>
+                            <span data-i18n="lblPercentile">Percentile</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="status-pill normal" id="pillWeightStatus">Optimal Mass</span>
+                    </div>
+                    <div class="verdict-info-card">
+                        <strong data-i18n="lblVerdict">Clinical Assessment Verdict</strong>
+                        <p id="txtWeightVerdict">Calculating indicators...</p>
+                    </div>
+                    <div class="intervention-box" id="boxWeightIntervention">
+                        <h5 data-i18n="lblAdvisory">⚠️ Pediatric Advisory Protocol</h5>
+                        <p id="txtWeightIntervention"></p>
+                    </div>
+                    <div class="chart-frame-wrapper">
+                        <canvas id="weightDedicatedChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎯 <span data-i18n="milestonesTitle">Active IAP Structural Milestones Timeline Tracking</span></h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;" data-i18n="milestonesSubtitle">The child's structural chronological milestone window is automatically prioritized and highlighted below.</p>
+                <div class="milestone-track" id="milestoneTrack"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Complete, linguistically accurate translation dictionary matrix
+    const i18nDictionary = {
+        en: {
+            loaderTitle: "IAP Child Growth Tracker", loaderSubtitle: "Mapping reference vectors safely...",
+            appTitle: "Indian Child Growth & Milestone", appSubtitle: "Comprehensive biological evaluation suite calibrated accurately against IAP standard parameters.",
+            engineTitle: "Input Details", lblGender: "Biological Gender", btnBoy: "Boy", btnGirl: "Girl",
+            profileBoy: "Baby Boy Profile", profileGirl: "Baby Girl Profile", lblDob: "Date of Birth",
+            lblHeight: "Current Height/Length", lblWeight: "Current Weight (kg)",
+            cardAge: "Calculated Age", cardHeight: "Standardized Height", cardWeight: "Standardized Weight", cardBmi: "Body Mass Index (BMI)",
+            analyticsHeight: "Height Analytics", analyticsWeight: "Weight Analytics", lblPercentile: "Percentile",
+            lblVerdict: "Clinical Assessment Verdict", lblAdvisory: "⚠️ Pediatric Advisory Protocol",
+            milestonesTitle: "Active IAP Structural Milestones Timeline Tracking", milestonesSubtitle: "The child's structural chronological milestone window is automatically prioritized and highlighted below."
+        },
+        hi: {
+            loaderTitle: "आईएपी बाल विकास ट्रैकर", loaderSubtitle: "संदर्भ वैक्टर को सुरक्षित रूप से मैप किया जा रहा है...",
+            appTitle: "भारतीय बाल विकास और मील के पत्थर", appSubtitle: "आईएपी मानक मापदंडों के खिलाफ सटीक रूप से कैलिब्रेट किया गया व्यापक जैविक मूल्यांकन सूट।",
+            engineTitle: "विवरण दर्ज करें", lblGender: "जैविक लिंग", btnBoy: "लड़का", btnGirl: "लड़की",
+            profileBoy: "लड़के का प्रोफाइल", profileGirl: "लड़की का प्रोफाइल", lblDob: "जन्म तिथि",
+            lblHeight: "वर्तमान लंबाई / ऊंचाई", lblWeight: "वर्तमान वजन (किग्रा)",
+            cardAge: "परिकलित आयु", cardHeight: "मानकीकृत ऊंचाई", cardWeight: "मानकीकृत वजन", cardBmi: "बॉडी मास इंडेक्स (BMI)",
+            analyticsHeight: "ऊंचाई विश्लेषण", analyticsWeight: "वजन विश्लेषण", lblPercentile: "प्रतिशतक (Percentile)",
+            lblVerdict: "नैदानिक मूल्यांकन निष्कर्ष", lblAdvisory: "⚠️ बाल चिकित्सा सलाहकार प्रोटोकॉल",
+            milestonesTitle: "सक्रिय आईएपी संरचनात्मक मील के पत्थर समयरेखा ट्रैकिंग", milestonesSubtitle: "बच्चे की संरचनात्मक कालानुक्रमिक मील का पत्थर विंडो स्वचालित रूप से हाइलाइट की गई है।"
+        },
+        bn: {
+            loaderTitle: "IAP শিশু বৃদ্ধি ট্র্যাকার", loaderSubtitle: "সুরক্ষিতভাবে বৃদ্ধি রেফারেন্স ম্যাপিং করা হচ্ছে...",
+            appTitle: "ভারতীয় শিশুর বৃদ্ধি ও মাইলস্টোন", appSubtitle: "IAP স্ট্যান্ডার্ড প্যারামিটারের উপর ভিত্তি করে নিখুঁতভাবে তৈরি জৈবিক মূল্যায়ন স্যুট।",
+            engineTitle: "তথ্য ইনপুট করুন", lblGender: "জৈবিক লিঙ্গ", btnBoy: "ছেলে", btnGirl: "মেয়ে",
+            profileBoy: "শিশু পুত্রের প্রোফাইল", profileGirl: "শিশু কন্যার প্রোফাইল", lblDob: "জন্ম তারিখ",
+            lblHeight: "বর্তমান উচ্চতা / দৈর্ঘ্য", lblWeight: "বর্তমান ওজন (কেজি)",
+            cardAge: "হিসাবকৃত বয়স", cardHeight: "আদর্শ উচ্চতা", cardWeight: "আদর্শ ওজন", cardBmi: "বডি মাস ইনডেক্স (BMI)",
+            analyticsHeight: "উচ্চতা বিশ্লেষণ", analyticsWeight: "ওজন বিশ্লেষণ", lblPercentile: "পার্সেন্টাইল",
+            lblVerdict: "ক্লিনিকাল মূল্যায়ন রায়", lblAdvisory: "⚠️ পেডিয়াট্রিক অ্যাডভাইজরি প্রোটোকল",
+            milestonesTitle: "সক্রিয় IAP মাইলফলক টাইমলাইন ট্র্যাকিং", milestonesSubtitle: "শিশুর বিকাশগত মাইলফলক উইন্ডোটি স্বয়ংক্রিয়ভাবে নিচে হাইলাইট করা হয়েছে।"
+        },
+        mr: {
+            loaderTitle: "IAP बाल विकास ट्रॅकर", loaderSubtitle: "संदर्भ वेक्टर सुरक्षितपणे मॅप करत आहे...",
+            appTitle: "भारतीय बाल विकास आणि टप्पे", appSubtitle: "IAP मानकांनुसार अचूकपणे कॅरिब्रेट केलेला सर्वसमावेशक जैविक मूल्यमापन संच.",
+            engineTitle: "तपशील प्रविष्ट करा", lblGender: "जैविक लिंग", btnBoy: "मुलगा", btnGirl: "मुलगी",
+            profileBoy: "मुलाचे प्रोफाइल", profileGirl: "मुलीचे प्रोफाइल", lblDob: "जन्म तारीख",
+            lblHeight: "सध्याची उंची / लांबी", lblWeight: "सध्याचे वजन (किग्रॅ)",
+            cardAge: "मोजलेले वय", cardHeight: "प्रमाणित उंची", cardWeight: "प्रमाणित वजन", cardBmi: "बॉडी मास इंडेक्स (BMI)",
+            analyticsHeight: "उंची विश्लेषण", analyticsWeight: "वजन विश्लेषण", lblPercentile: "पर्सेंटाईल",
+            lblVerdict: "वैद्यकीय मूल्यमापन निकाल", lblAdvisory: "⚠️ बालरोग सल्लागार प्रोटोकॉल",
+            milestonesTitle: "सक्रिय IAP विकासात्मक टप्पे ट्रॅकिंग", milestonesSubtitle: "बालकाच्या वयानुसार विकासाचे टप्पे स्वयंचलितपणे खाली हायलाईट केले आहेत."
+        },
+        te: {
+            loaderTitle: "IAP చైల్డ్ గ్రోత్ ట్రాకర్", loaderSubtitle: "సూచన వెక్టర్స్ సురక్షితంగా మ్యాప్ చేయబడుతున్నాయి...",
+            appTitle: "భారతీయ పిల్లల ఎదుగుదల & మైలురాళ్ళు", appSubtitle: "IAP ప్రామాణిక పారామితులకు అనుగుణంగా ఖచ్చితంగా క్రమాంకనం చేయబడిన సమగ్ర జీవ మూల్యాంకన సూట్.",
+            engineTitle: "వివరాలను నమోదు చేయండి", lblGender: "జీవసంబంధ లింగం", btnBoy: "బాలుడు", btnGirl: "బాలిక",
+            profileBoy: "బాబు ప్రొఫైల్", profileGirl: "పాప ప్రొఫైల్", lblDob: "పుట్టిన తేదీ",
+            lblHeight: "ప్రస్తుత ఎత్తు / పొడవు", lblWeight: "ప్రస్తుత బరువు (కిలోలు)",
+            cardAge: "లెక్కించిన వయస్సు", cardHeight: "प్రామాణిక ఎత్తు", cardWeight: "ప్రామాణిక బరువు", cardBmi: "బాడీ మాస్ ఇండెక్స్ (BMI)",
+            analyticsHeight: "ఎత్తు విశ్లేషణ", analyticsWeight: "బరువు విశ్లేషణ", lblPercentile: "పర్సంటైల్",
+            lblVerdict: "వైద్య మూల్యాంకన తీర్పు", lblAdvisory: "⚠️ పీడియాట్రిక్ అడ్వైజరీ ప్రోటోకాల్",
+            milestonesTitle: "సక్రియ IAP మైల్‌స్టోన్స్ టైమ్‌లైన్ ట్రాకింగ్", milestonesSubtitle: "పిల్లల వయస్సు ఆధారిత అభివృద్ధి మైలురాళ్ళు స్వయంచాలకంగా క్రింద హైలైట్ చేయబడతాయి."
+        },
+        ta: {
+            loaderTitle: "IAP குழந்தை வளர்ச்சி கண்காணிப்பாளர்", loaderSubtitle: "குறிப்பு அளவீடுகள் பாதுகாப்பாக கணக்கிடப்படுகின்றன...",
+            appTitle: "இந்திய குழந்தை வளர்ச்சி & மைல்கற்கள்", appSubtitle: "IAP தரநிலை அளவுருக்களுக்கு எதிராக துல்லியமாக அளவீடு செய்யப்பட்ட விரிவான உயிரியல் மதிப்பீட்டுத் தொகுப்பு.",
+            engineTitle: "விவரங்களை உள்ளிடவும்", lblGender: "உயிரியல் பாலினம்", btnBoy: "ஆண் குழந்தை", btnGirl: "பெண் குழந்தை",
+            profileBoy: "ஆண் குழந்தை சுயவிவரம்", profileGirl: "பெண் குழந்தை சுயவிவரம்", lblDob: "பிறந்த தேதி",
+            lblHeight: "தற்போதைய உயரம் / நீளம்", lblWeight: "தற்போதைய எடை (கिलो)",
+            cardAge: "கணக்கிடப்பட்ட வயது", cardHeight: "தரப்படுத்தப்பட்ட உயரம்", cardWeight: "தரப்படுத்தப்பட்ட எடை", cardBmi: "உடல் நிறை குறியீட்டெண் (BMI)",
+            analyticsHeight: "உயரம் பகுப்பாய்வு", analyticsWeight: "எடை பகுப்பாய்வு", lblPercentile: "பெர்சென்டைல்",
+            lblVerdict: "மருத்துவ மதிப்பீட்டு தீர்ப்பு", lblAdvisory: "⚠️ குழந்தை மருத்துவ ஆலோசனை நெறிமுறை",
+            milestonesTitle: "செயலில் உள்ள IAP மைல்கற்கள் காலவரிசை கண்காணிப்பு", milestonesSubtitle: "குழந்தையின் வயதுக்கேற்ற வளர்ச்சி மைல்கற்கள் தானாகவே கீழே முன்னிலைப்படுத்தப்படும்."
+        },
+        gu: {
+            loaderTitle: "IAP બાળ विकास ટ્રેકર", loaderSubtitle: "સંદર્ભ વેક્ટર્સ સુરક્ષિત રીતે મેપ થઈ રહ્યા છે...",
+            appTitle: "ભારતીય બાળ વિકાસ અને માઇલસ્ટોન્સ", appSubtitle: "IAP સ્ટાન્ડર્ડ પરિમાણો સામે સચોટ રીતે માપાંકિત વ્યાપક જૈવિક મૂલ્યાંકન સ્યુટ.",
+            engineTitle: "વિગતો દાખલ કરો", lblGender: "જૈવિક લિંગ", btnBoy: "છોકરો", btnGirl: "છોકરી",
+            profileBoy: "બાબા પ્રોફાઈલ", profileGirl: "બેબી પ્રોફાઈલ", lblDob: "જન્મ તારીખ",
+            lblHeight: "વર્તમાન ઊંચાઈ / લંબાઈ", lblWeight: "વર્તમાન વજન (કિલો)",
+            cardAge: "ગણતરી કરેલ ઉંમર", cardHeight: "પ્રમાણિત ઊંચાઈ", cardWeight: "પ્રમાણિત વજન", cardBmi: "બોडी માસ ઇન્ડેક્સ (BMI)",
+            analyticsHeight: "ઊંચાઈ વિશ્લેષણ", analyticsWeight: "වજન વિશ્લેષણ", lblPercentile: "પર્સન્ટાઇલ",
+            lblVerdict: "ક્લિનિકલ મૂલ્યાંકન ચુકાદો", lblAdvisory: "⚠️ બાળરોગ સલાહકાર પ્રોટોકોલ",
+            milestonesTitle: "સક્રિય IAP માઇલસ્ટોન્સ ટાઇમલાઇન ટ્રેકિંગ", milestonesSubtitle: "બાળકની ઉંમર આધારિત વિકાસલક્ષી સીમાચિહ્નો આપમેળે નીચે હાઇલાઇટ થાય છે."
+        },
+        ur: {
+            loaderTitle: "آئی اے پی چائلڈ گروتھ ٹریکر", loaderSubtitle: "حوالہ جاتی ویکٹرز کی محفوظ میپنگ جاری ہے...",
+            appTitle: "انڈین چائلڈ گروتھ اینڈ مائل اسٹون", appSubtitle: "آئی اے پی کے معیاری پیرامیٹرز کے مطابق درست طریقے سے تیار کردہ جامع بائیولوجیکل تشخیصی سوٹ۔",
+            engineTitle: "تفصیلات درج کریں", lblGender: "حیاتیاتی جنس", btnBoy: "لڑکا", btnGirl: "لड़की",
+            profileBoy: "لڑکے کا پروفائل", profileGirl: "لڑکی کا پروفائل", lblDob: "تاریخ پیدائش",
+            lblHeight: "موجودہ قد / لمبائی", lblWeight: "موجودہ وزن (کلوگرام)",
+            cardAge: "حساب شدہ عمر", cardHeight: "معیاری قد", cardWeight: "معیاری وزن", cardBmi: "باڈی ماس انڈیکس (BMI)",
+            analyticsHeight: "قد کا تجزیہ", analyticsWeight: "وزن کا تجزیہ", lblPercentile: "پرسنٹائل",
+            lblVerdict: "طبی تشخیصی فیصلہ", lblAdvisory: "⚠️ بچوں کے امراض کا مشاورتی پروٹوکول",
+            milestonesTitle: "سرگرم آئی اے پی سنگ میل ٹائم لائن ٹریکنگ", milestonesSubtitle: "بچے کی عمر کے لحاظ سے اہم ترقیاتی سنگ میل خود بخود نیچے نمایاں ہو جاتے ہیں۔"
+        },
+        kn: {
+            loaderTitle: "IAP ಮಕ್ಕಳ ಬೆಳವಣಿಗೆಯ ಟ್ರ್ಯಾಕರ್", loaderSubtitle: "ಉಲ್ಲೇಖಿತ ವೆಕ್ಟರ್‌ಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಮ್ಯಾಪ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+            appTitle: "ಭಾರತೀಯ ಮಕ್ಕಳ ಬೆಳವಣಿಗೆ ಮತ್ತು ಮೈಲಿಗಲ್ಲುಗಳು", appSubtitle: "IAP ಪ್ರಮಾಣಿತ ನಿಯತಾಂಕಗಳಿಗೆ ಅನುಗುಣವಾಗಿ ನಿಖರವಾಗಿ ಮಾಪನಾಂಕ ನಿರ್ಣಯಿಸಲಾದ ಸಮಗ್ರ ಜೈವಿಕ ಮೌಲ್ಯಮಾಪನ ಸೂಟ್.",
+            engineTitle: "ವಿವರಗಳನ್ನು ನಮೂದಿಸಿ", lblGender: "ಜೈವಿಕ ಲಿಂಗ", btnBoy: "ಬಾಲಕ", btnGirl: "ಬಾಲಕಿ",
+            profileBoy: "ಗಂಡು ಮಗುವಿನ ಪ್ರೊಫೈಲ್", profileGirl: "ಹೆಣ್ಣು ಮಗುವಿನ ಪ್ರೊಫೈಲ್", lblDob: "ಹುಟ್ಟಿದ ದಿನಾಂಕ",
+            lblHeight: "ಪ್ರಸ್ತುತ ಎತ್ತರ / ಉದ್ದ", lblWeight: "ಪ್ರಸ್ತುತ ತೂಕ (ಕೆಜಿ)",
+            cardAge: "ಲೆಕ್ಕಹಾಕಿದ ವಯಸ್ಸು", cardHeight: "ಪ್ರಮಾಣೀಕೃತ ಎತ್ತರ", cardWeight: "ಪ್ರಮಾಣೀಕೃತ ತೂಕ", cardBmi: "ಬಾಡಿ ಮಾಸ್ ಇಂಡೆಕ್ಸ್ (BMI)",
+            analyticsHeight: "ಎತ್ತರದ ವಿશ્ಲೇಷಣೆ", analyticsWeight: "ತೂಕದ ವಿશ્ಲೇಷಣೆ", lblPercentile: "ಪರ್ಸೆಂಟೈಲ್",
+            lblVerdict: "ವೈದ್ಯಕೀಯ ಮೌಲ್ಯಮಾಪನ ತೀರ್ಪು", lblAdvisory: "⚠️ ಮಕ್ಕಳ ವೈದ್ಯಕೀಯ ಸಲಹಾ ಪ್ರೋಟೋಕಾಲ್",
+            milestonesTitle: "ಸಕ್ರಿಯ IAP ಮೈಲಿಗಲ್ಲುಗಳ ಕಾಲಾವಧಿ ಟ್ರ್ಯಾಕಿಂಗ್", milestonesSubtitle: "ಮಗುವಿನ ವಯಸ್ಸಿಗೆ ಸಂಬಂಧಿಸಿದ ಬೆಳವಣಿಗೆಯ ಮೈಲಿಗಲ್ಲುಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಕೆಳಗೆ ಹೈಲೈಟ್ ಮಾಡಲಾಗುತ್ತದೆ."
+        },
+        or: {
+            loaderTitle: "IAP ଶିଶୁ ବିକାଶ ଟ୍ରାକର", loaderSubtitle: "ସନ୍ଦର୍ଭ ଭେକ୍ଟରଗୁଡିକ ସୁରକ୍ଷିତ ଭାବରେ ମ୍ୟାପ୍ କରାଯାଉଛି...",
+            appTitle: "ଭାରତୀୟ ଶିଶୁ ବିକାଶ ଏବଂ ମାଇଲଖୁଣ୍ଟ", appSubtitle: "IAP ମାନକ ପାରାମିଟର ଆଧାରରେ ସଠିକ୍ ଭାବରେ ବିକଶିତ ଜୈବିକ ମୂଲ୍ୟାଙ୍କନ ସୁଇଟ୍।",
+            engineTitle: "ବିବରଣୀ ପ୍ରବେଶ କରନ୍ତୁ", lblGender: "ଜୈବିକ ଲିଙ୍ଗ", btnBoy: "ପୁଅ", btnGirl: "ଝିଅ",
+            profileBoy: "ପୁତ୍ର ସନ୍ତାନର ପ୍ରୋଫାଇଲ୍", profileGirl: "କନ୍ୟା ସନ୍ତାନର ପ୍ରୋଫାଇଲ୍", lblDob: "ଜନ୍ମ ତାରିଖ",
+            lblHeight: "ବର୍ତ୍ତମାନ ଉଚ୍ଚତା / ଲମ୍ବ", lblWeight: "ବର୍ତ୍ତମାନ ଓଜନ (କିଗ୍ରା)",
+            cardAge: "ଗଣନା କରାଯାଇଥିବା ବୟସ", cardHeight: "ମାନକ ଉଚ୍ଚତା", cardWeight: "ମାନକ ଓଜନ", cardBmi: "ବଡି ମାସ ଇଣ୍ଡେକ୍ସ (BMI)",
+            analyticsHeight: "ଉଚ୍ଚତା ବିଶ୍ଳେଷଣ", analyticsWeight: "ଓଜନ ବିଶ୍ଳେଷଣ", lblPercentile: "ପର୍ସେଣ୍ଟାଇଲ୍",
+            lblVerdict: "କ୍ଲିନିକାଲ୍ ମୂଲ୍ୟାଙ୍କନ ନିଷ୍ପତ୍ତି", lblAdvisory: "⚠️ ଶିଶୁ ରୋଗ ବିଶେଷଜ୍ଞ ପରାମର୍ଶ ପ୍ରୋଟୋକଲ୍",
+            milestonesTitle: "ସକ୍ରିୟ IAP ବିକାଶମୂଳକ ମାଇଲଖୁଣ୍ଟ ଟ୍ରାକିଂ", milestonesSubtitle: "ଶିଶୁର ବୟସ ଅନୁଯାୟୀ ବିକାଶର ମାଇଲଖୁଣ୍ଟ ସ୍ୱୟଂଚାଳିତ ଭାବରେ ନିମ୍ନରେ ହାଇଲାଇଟ୍ ହୋଇଛି।"
+        },
+        ml: {
+            loaderTitle: "IAP ചൈൽഡ് ഗ്രോത്ത് ട്രാക്കർ", loaderSubtitle: "റെഫറൻസ് വെക്ടറുകൾ സുരക്ഷിതമായി മാപ്പ് ചെയ്യുന്നു...",
+            appTitle: "ഇന്ത്യൻ കുട്ടികളുടെ വളർച്ചയും നാഴികക്കല്ലുകളും", appSubtitle: "IAP സ്റ്റാൻഡേർഡ് പാരാമീറ്ററുകൾ അടിസ്ഥാനമാക്കി കൃത്യമായി കാലിബ്രേറ്റ് ചെയ്ത സമഗ്ര ജൈവ മൂല്യനിർണ്ണയ സ്യൂട്ട്.",
+            engineTitle: "വിവരങ്ങൾ രേഖപ്പെടുത്തുക", lblGender: "ജൈവിക ലിംഗഭേദം", btnBoy: "ആൺകുട്ടി", btnGirl: "പെൺകുട്ടി",
+            profileBoy: "ആൺകുട്ടിയുടെ പ്രൊഫൈൽ", profileGirl: "പെൺകുട്ടിയുടെ പ്രൊഫൈൽ", lblDob: "ജനന തീയതി",
+            lblHeight: "നിലവിലെ ഉയരം / നീളം", lblWeight: "നിലവിലെ ഭാരം (കിലോ)",
+            cardAge: "കണക്കാക്കിയ പ്രായം", cardHeight: "മാനദണ്ഡമാക്കിയ ഉയരം", cardWeight: "മാനദണ്ഡമാക്കിയ ഭാരം", cardBmi: "ബോഡി മാസ് ഇൻഡക്സ് (BMI)",
+            analyticsHeight: "ഉയരം വിശകലനം", analyticsWeight: "ഭാരം വിശകലനം", lblPercentile: "പെർസെന്റൈൽ",
+            lblVerdict: "ക്ലിനിക്കൽ വിലയിരുത്തൽ വിധി", lblAdvisory: "⚠️ പീഡിയാട്രിക് അഡ്വൈസറി പ്രോട്ടോക്കോൾ",
+            milestonesTitle: "സജീവ IAP വികസന നാഴികക്കല്ലുകൾ ട്രാക്കിംഗ്", milestonesSubtitle: "കുട്ടിയുടെ പ്രായത്തിന് അനുസരിച്ചുള്ള വളർച്ചാ നാഴികക്കല്ലുകൾ താഴെ സ്വയം ഹൈലൈറ്റ് ചെയ്യപ്പെടും."
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof Chart !== 'undefined' && Chart.registerables) {
+            Chart.register(...Chart.registerables);
+        }
+
+        let activeGender = "boy";
+        let currentLang = "en";
+        let heightChartRef = null;
+        let weightChartRef = null;
+        let pipelineTimeoutId = null;
+
+        const referenceTimelineMonths = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120];
+        
+        const extendedGrowthReferenceCurves = {
+            boy: {
+                height: {
+                    p3:  [46, 64, 71, 77, 81, 85, 89, 93, 96,  99,  101, 104, 107, 110, 113, 116, 119, 122, 125, 127, 130],
+                    p15: [47.6, 65.6, 73.0, 79.0, 83.4, 87.8, 91.8, 95.8, 99.2, 102.2, 104.6, 107.6, 110.6, 113.6, 116.6, 119.6, 122.6, 125.6, 128.6, 131.0, 134.0],
+                    p50: [50, 68, 76, 82, 87, 92, 96, 100, 104, 107, 110, 113, 116, 119, 122, 125, 128, 131, 134, 137, 140],
+                    p85: [51.6, 69.6, 78.0, 84.4, 89.4, 94.4, 98.8, 102.8, 106.8, 110.2, 113.2, 116.6, 119.6, 123.0, 126.0, 129.0, 132.0, 135.0, 138.0, 141.0, 144.0],
+                    p97: [54, 72, 81, 88, 93, 98, 103, 107, 111, 115, 118, 122, 125, 129, 132, 135, 138, 141, 144, 147, 150]
+                },
+                weight: {
+                    p3:  [2.4, 6.4, 7.8, 8.8, 9.7,  10.5, 11.3, 12.0, 12.7, 13.4, 14.1, 14.8, 15.6, 16.5, 17.5, 18.6, 19.8, 21.1, 22.5, 24.0, 25.5],
+                    p15: [2.76, 7.0, 8.52, 9.64, 10.7, 11.62, 12.5, 13.32, 14.14, 14.96, 15.78, 16.64, 17.56, 18.62, 19.78, 21.08, 22.52, 24.06, 25.78, 27.6, 29.5],
+                    p50: [3.3, 7.9, 9.6, 10.9, 12.2, 13.3, 14.3, 15.3, 16.3, 17.3, 18.3, 19.4, 20.5, 21.8, 23.2, 24.8, 26.6, 28.5, 30.7, 33.0, 35.5],
+                    p85: [3.7, 8.66, 10.56, 12.02, 13.44, 14.7, 15.9, 17.1, 18.38, 19.66, 20.98, 22.44, 23.98, 25.72, 27.64, 29.8, 32.16, 34.7, 37.54, 40.52, 43.7],
+                    p97: [4.3, 9.8, 12.0, 13.7, 15.3, 16.8, 18.3, 19.8, 21.5, 23.2, 25.0, 27.0, 29.2, 31.6, 34.3, 37.3, 40.5, 44.0, 47.8, 51.8, 56.0]
+                }
+            },
+            girl: {
+                height: {
+                    p3:  [45, 62, 69, 75, 80, 84, 88, 91, 95,  98,  100, 103, 106, 109, 112, 115, 118, 121, 124, 127, 130],
+                    p15: [46.6, 63.6, 71.0, 77.0, 82.0, 86.4, 90.8, 94.2, 98.2, 101.2, 103.6, 106.6, 109.6, 112.6, 115.6, 118.6, 121.6, 124.6, 127.6, 131.0, 134.0],
+                    p50: [49, 66, 74, 80, 85, 90, 95, 99, 103, 106, 109, 112, 115, 118, 121, 124, 127, 130, 133, 137, 140],
+                    p85: [50.6, 67.6, 76.0, 82.4, 87.4, 92.4, 97.4, 101.4, 105.4, 108.8, 112.2, 115.6, 118.6, 122.0, 125.0, 128.0, 131.0, 134.4, 137.4, 141.4, 144.4],
+                    p97: [53, 70, 79, 86, 91, 96, 101, 105, 109, 113, 117, 121, 124, 128, 131, 134, 137, 141, 144, 148, 151]
+                },
+                weight: {
+                    p3:  [2.3, 5.8, 7.1, 8.1, 9.0,  9.8,  10.5, 11.2, 11.9, 12.6, 13.3, 14.1, 14.9, 15.8, 16.8, 18.0, 19.3, 20.8, 22.4, 24.2, 26.2],
+                    p15: [2.66, 6.4, 7.82, 8.94, 10.0, 10.92, 11.74, 12.56, 13.34, 14.16, 15.02, 15.94, 16.9, 17.96, 19.16, 20.56, 22.06, 23.8, 25.64, 27.76, 30.12],
+                    p50: [3.2, 7.3, 8.9, 10.2, 11.5, 12.6, 13.6, 14.6, 15.5, 16.5, 17.6, 18.7, 19.9, 21.2, 22.7, 24.4, 26.2, 28.3, 30.5, 33.1, 36.0],
+                    p85: [3.6, 8.1, 9.94, 11.4, 12.82, 14.12, 15.36, 16.6, 17.78, 19.1, 20.56, 22.1, 23.78, 25.64, 27.74, 30.08, 32.6, 35.46, 38.5, 41.94, 45.76],
+                    p97: [4.2, 9.3, 11.5, 13.2, 14.8, 16.4, 18.0, 19.6, 21.2, 23.0, 25.0, 27.2, 29.6, 32.3, 35.3, 38.6, 42.2, 46.2, 50.5, 55.2, 60.4]
+                }
+            }
+        };
+
+        const developmentalMilestoneMatrix = [
+            { min: 0, max: 2, label: "0-2 Mos", title: "Newborn Reflexive Phase", items: ["Focuses on faces briefly", "Startles at sharp environmental sounds", "Lifts head slightly when prone"] },
+            { min: 2, max: 4, label: "2-4 Mos", title: "Social Smiling Phase", items: ["Tracks moving items visually", "Coos and produces vowel sounds", "Holds head steady up independently"] },
+            { min: 4, max: 6, label: "4-6 Mos", title: "Hand-Eye Coordination", items: ["Rolls over from front to back", "Reaches eagerly for objects & rattles", "Babbles double consonant sounds"] },
+            { min: 6, max: 9, label: "6-9 Mos", title: "Structural Sitting Mark", items: ["Sits securely without back cushions", "Transfers objects from hand to hand", "Responds to spoken native name string"] },
+            { min: 9, max: 12, label: "9-12 Mos", title: "Locomotion Initiation", items: ["Pulls self up to standing position", "Develops precise thumb pincer grasp", "Speaks first intentional words clearly"] },
+            { min: 12, max: 18, label: "12-18 Mos", title: "Exploratory Toddler Era", items: ["Walks unassisted across spaces", "Drinks from a standard cup cleanly", "Points out to indicate things of interest"] },
+            { min: 18, max: 24, label: "18-24 Mos", title: "Phrase Formulation Step", items: ["Builds block structures of 4 links", "Assembles cohesive 2-word phrase links", "Mimics adult household behaviors"] },
+            { min: 24, max: 36, label: "2-3 Yrs", title: "Autonomy Expansion Track", items: ["Runs smoothly and handles staircases", "Categorizes items by primary color specs", "Verbalizes distinct descriptive sentences"] },
+            { min: 36, max: 48, label: "3-4 Yrs", title: "Cooperative Peer Play", items: ["Balances cleanly on 1 foot briefly", "Draws simple round geometric shapes", "Shares imaginative narrative story arcs"] },
+            { min: 48, max: 60, label: "4-5 Yrs", title: "School Readiness", items: ["Hops and skips fluidly on one leg", "Recites familiar nursery rhyme verses", "Manages basic toilet functions alone"] },
+            { min: 60, max: 72, label: "5-6 Yrs", title: "Socio-Cognitive Emergence", items: ["Writes name and copies basic shapes", "Counts objects past 10 accurately", "Understands morning vs evening time"] },
+            { min: 72, max: 84, label: "6-7 Yrs", title: "Early Academic Integration", items: ["Reads simple full sentence strings", "Ties shoelaces independently", "Follows advanced 3-step dynamic rules"] },
+            { min: 84, max: 96, label: "7-8 Yrs", title: "Refined Motor Application", items: ["Rides a standard bicycle without support", "Maintains highly coordinated handwriting", "Expresses empathetic logical deduction sets"] },
+            { min: 96, max: 120, label: "8-10 Yrs", title: "Pre-Adolescent Maturity", items: ["Organizes school routines autonomously", "Exhibits complex team play athletic control", "Formulates clear critical individual choices"] }
+        ];
+
+        // Core dynamic language localization application execution function
+        function applyTranslations() {
+            const strings = i18nDictionary[currentLang] || i18nDictionary['en'];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (strings[key]) {
+                    el.innerText = strings[key];
+                }
+            });
+            // Update page language attribute for modern layout engines
+            document.documentElement.setAttribute('lang', currentLang);
+        }
+
+        function persistInputsToCache() {
+            const state = {
+                gender: activeGender,
+                dob: document.getElementById('dobInput').value,
+                height: document.getElementById('heightInput').value,
+                heightUnit: document.getElementById('heightUnit').value,
+                weight: document.getElementById('weightInput').value
+            };
+            localStorage.setItem('iap_copilot_persisted_state', JSON.stringify(state));
+        }
+
+        function restoreInputsFromCache() {
+            try {
+                // Handle Language Caching State Initialization Engine Mechanics Loop
+                const cachedLang = localStorage.getItem('iap_copilot_lang');
+                if (cachedLang && i18nDictionary[cachedLang]) {
+                    currentLang = cachedLang;
+                } else {
+                    currentLang = 'en';
+                }
+                document.getElementById('langSelect').value = currentLang;
+                applyTranslations();
+
+                const cache = localStorage.getItem('iap_copilot_persisted_state');
+                if (cache) {
+                    const state = JSON.parse(cache);
+                    activeGender = state.gender || "boy";
+                    document.getElementById('dobInput').value = state.dob || "2024-06-15";
+                    document.getElementById('heightInput').value = state.height || "82.5";
+                    document.getElementById('heightUnit').value = state.heightUnit || "cm";
+                    document.getElementById('weightInput').value = state.weight || "11.4";
+                    
+                    document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+                    const targetBtn = document.querySelector(`.gender-btn[data-gender="${activeGender}"]`);
+                    if (targetBtn) targetBtn.classList.add('active');
+                    syncAvatarThemeStyles();
+                }
+            } catch(e) {
+                console.error("Cache processing error safely bypassed:", e);
+            }
+        }
+
+        function triggerPipelineRefresh() {
+            const overlay = document.getElementById('appLoaderOverlay');
+            if (overlay) overlay.classList.remove('hidden');
+            
+            persistInputsToCache();
+            
+            if (pipelineTimeoutId) clearTimeout(pipelineTimeoutId);
+            pipelineTimeoutId = setTimeout(() => {
+                try {
+                    executeGrowthCoreAnalytics();
+                } catch(e) {
+                    console.error("Pipeline breakdown handled:", e);
+                } finally {
+                    if (overlay) overlay.classList.add('hidden');
+                }
+            }, 250);
+        }
+
+        function executeGrowthCoreAnalytics() {
+            const dobVal = document.getElementById('dobInput').value;
+            if (!dobVal) return;
+
+            const dob = new Date(dobVal);
+            const current = new Date();
+            
+            let totalMonths = (current.getFullYear() - dob.getFullYear()) * 12 + (current.getMonth() - dob.getMonth());
+            if (current.getDate() < dob.getDate()) totalMonths--;
+            
+            if (totalMonths < 0) totalMonths = 0;
+            if (totalMonths > 120) totalMonths = 120;
+
+            const ageYrs = Math.floor(totalMonths / 12);
+            const ageMos = totalMonths % 12;
+            
+            // Localized Dynamic Interpolation Formatters
+            if (currentLang === 'hi') {
+                document.getElementById('txtSummaryAge').innerText = `${ageYrs} वर्ष ${ageMos} माह`;
+            } else if (currentLang === 'bn') {
+                document.getElementById('txtSummaryAge').innerText = `${ageYrs} বছর ${ageMos} মাস`;
+            } else {
+                document.getElementById('txtSummaryAge').innerText = `${ageYrs} Yrs ${ageMos} Mos`;
+            }
+
+            let rawHeight = parseFloat(document.getElementById('heightInput').value) || 0;
+            if (document.getElementById('heightUnit').value === 'inch') {
+                rawHeight = rawHeight * 2.54;
+            }
+            document.getElementById('txtSummaryHeight').innerText = `${rawHeight.toFixed(1)} cm`;
+
+            const rawWeight = parseFloat(document.getElementById('weightInput').value) || 0;
+            document.getElementById('txtSummaryWeight').innerText = `${rawWeight.toFixed(1)} kg`;
+
+            let bmiScore = 0;
+            let bmiCategory = "Unknown";
+            if (rawHeight > 0 && rawWeight > 0) {
+                const heightInMeters = rawHeight / 100;
+                bmiScore = rawWeight / (heightInMeters * heightInMeters);
+                
+                if (bmiScore < 14.0) {
+                    bmiCategory = currentLang === 'hi' ? "कम वजन" : (currentLang === 'bn' ? "কম ওজন" : "Thinness");
+                    document.getElementById('badgeBMICategory').style.background = "rgba(239, 68, 68, 0.1)";
+                    document.getElementById('badgeBMICategory').style.color = "var(--danger)";
+                } else if (bmiScore >= 14.0 && bmiScore < 18.5) {
+                    bmiCategory = currentLang === 'hi' ? "सामान्य" : (currentLang === 'bn' ? "স্বাভাবিক" : "Optimal");
+                    document.getElementById('badgeBMICategory').style.background = "rgba(16, 185, 129, 0.1)";
+                    document.getElementById('badgeBMICategory').style.color = "var(--success)";
+                } else if (bmiScore >= 18.5 && bmiScore < 22.0) {
+                    bmiCategory = currentLang === 'hi' ? "अधिक वजन का जोखिम" : (currentLang === 'bn' ? "অতিরিক্ত ওজনের ঝুঁকি" : "Overweight Risk");
+                    document.getElementById('badgeBMICategory').style.background = "rgba(245, 158, 11, 0.1)";
+                    document.getElementById('badgeBMICategory').style.color = "var(--warning)";
+                } else {
+                    bmiCategory = currentLang === 'hi' ? "मोटापा" : (currentLang === 'bn' ? "স্থূলতা" : "Obesity Spectrum");
+                    document.getElementById('badgeBMICategory').style.background = "rgba(239, 68, 68, 0.1)";
+                    document.getElementById('badgeBMICategory').style.color = "var(--danger)";
+                }
+            }
+            document.getElementById('txtSummaryBMI').innerText = bmiScore > 0 ? bmiScore.toFixed(1) : "0.0";
+            document.getElementById('badgeBMICategory').innerText = bmiCategory;
+
+            const hPercentile = computeFivePercentileTrack(totalMonths, rawHeight, 'height');
+            const wPercentile = computeFivePercentileTrack(totalMonths, rawWeight, 'weight');
+
+            document.getElementById('lblHeightPercentile').innerText = formatPercentileSuffix(hPercentile);
+            document.getElementById('lblWeightPercentile').innerText = formatPercentileSuffix(wPercentile);
+
+            const hClass = applyBiometricStatusStyle('pillHeightStatus', hPercentile, 'height');
+            const wClass = applyBiometricStatusStyle('pillWeightStatus', wPercentile, 'weight');
+
+            renderClinicalAssessmentNotices(hPercentile, wPercentile, hClass, wClass);
+            renderMilestoneTrack(totalMonths);
+            refreshIndependentBiometricCharts(totalMonths, rawHeight, rawWeight);
+        }
+
+        function computeFivePercentileTrack(ageInMonths, value, type) {
+            const dataset = extendedGrowthReferenceCurves[activeGender][type];
+            let lowIdx = 0, uppIdx = referenceTimelineMonths.length - 1;
+            for (let i = 0; i < referenceTimelineMonths.length; i++) {
+                if (referenceTimelineMonths[i] <= ageInMonths) lowIdx = i;
+                if (referenceTimelineMonths[i] >= ageInMonths) { uppIdx = i; break; }
+            }
+
+            let ratio = 0;
+            if (uppIdx !== lowIdx) {
+                ratio = (ageInMonths - referenceTimelineMonths[lowIdx]) / (referenceTimelineMonths[uppIdx] - referenceTimelineMonths[lowIdx]);
+            }
+
+            const p3 = dataset.p3[lowIdx] + ratio * (dataset.p3[uppIdx] - dataset.p3[lowIdx]);
+            const p15 = dataset.p15[lowIdx] + ratio * (dataset.p15[uppIdx] - dataset.p15[lowIdx]);
+            const p50 = dataset.p50[lowIdx] + ratio * (dataset.p50[uppIdx] - dataset.p50[lowIdx]);
+            const p85 = dataset.p85[lowIdx] + ratio * (dataset.p85[uppIdx] - dataset.p85[lowIdx]);
+            const p97 = dataset.p97[lowIdx] + ratio * (dataset.p97[uppIdx] - dataset.p97[lowIdx]);
+
+            if (value <= p3) return 3;
+            if (value >= p97) return 97;
+
+            if (value < p15) return 3 + ((value - p3) / (p15 - p3)) * 12;
+            if (value < p50) return 15 + ((value - p15) / (p50 - p15)) * 35;
+            if (value < p85) return 50 + ((value - p50) / (p85 - p50)) * 35;
+            return 85 + ((value - p85) / (p97 - p85)) * 12;
+        }
+
+        function formatPercentileSuffix(val) {
+            const rounded = Math.round(val);
+            if (currentLang !== 'en') return `${rounded}%`;
+            if (rounded >= 11 && rounded <= 13) return `${rounded}th`;
+            switch(rounded % 10) {
+                case 1: return `${rounded}st`;
+                case 2: return `${rounded}nd`;
+                case 3: return `${rounded}rd`;
+                default: return `${rounded}th`;
+            }
+        }
+
+        function applyBiometricStatusStyle(elementId, pct, type) {
+            const pill = document.getElementById(elementId);
+            pill.className = "status-pill ";
+            
+            if (pct < 15) {
+                pill.classList.add('danger');
+                if (currentLang === 'hi') {
+                    pill.innerText = type === 'height' ? "📉 कम ऊंचाई सीमा" : "📉 कम वजन सीमा";
+                } else if (currentLang === 'bn') {
+                    pill.innerText = type === 'height' ? "📉 কম উচ্চতা সীমা" : "📉 কম ওজন সীমা";
+                } else {
+                    pill.innerText = type === 'height' ? "📉 Stunted Spectrum" : "📉 Underweight Spectrum";
+                }
+                return "under";
+            } else if (pct > 85) {
+                pill.classList.add('warning');
+                if (currentLang === 'hi') {
+                    pill.innerText = type === 'height' ? "📈 अधिक ऊंचाई सीमा" : "📈 अधिक वजन सीमा";
+                } else if (currentLang === 'bn') {
+                    pill.innerText = type === 'height' ? "📈 উচ্চতা বৃদ্ধির সীমা" : "📈 অতিরিক্ত ওজন সীমা";
+                } else {
+                    pill.innerText = type === 'height' ? "📈 High Stature" : "📈 Overweight Spectrum";
+                }
+                return "over";
+            } else {
+                pill.classList.add('normal');
+                if (currentLang === 'hi') {
+                    pill.innerText = type === 'height' ? "✨ सामान्य ऊंचाई" : "✨ स्वस्थ वजन प्रोफाइल";
+                } else if (currentLang === 'bn') {
+                    pill.innerText = type === 'height' ? "✨ স্বাভাবিক উচ্চতা" : "✨ সুস্থ ওজন প্রোফাইল";
+                } else {
+                    pill.innerText = type === 'height' ? "✨ Normal Stature" : "✨ Healthy Mass Profile";
+                }
+                return "normal";
+            }
+        }
+
+        function renderClinicalAssessmentNotices(hp, wp, hClass, wClass) {
+            const hVerdict = document.getElementById('txtHeightVerdict');
+            const hBox = document.getElementById('boxHeightIntervention');
+            const hIntText = document.getElementById('txtHeightIntervention');
+
+            const wVerdict = document.getElementById('txtWeightVerdict');
+            const wBox = document.getElementById('boxWeightIntervention');
+            const wIntText = document.getElementById('txtWeightIntervention');
+
+            // Handle localized updates conditionally for deep analytical feedback
+            if (currentLang === 'hi') {
+                hVerdict.innerText = hClass === 'normal' ? "कंकाल का विकास सुरक्षित रूप से ट्रैक पर है।" : "ऊंचाई निचले मानक स्तर पर है। पोषण में सुधार की आवश्यकता हो सकती है।";
+                wVerdict.innerText = wClass === 'normal' ? "शारीरिक द्रव्यमान बिल्कुल सही स्तर पर है।" : "मापा गया वजन लक्षित मापदंडों से कम है।";
+                hIntText.innerText = "रागी, दूध और पनीर जैसे कैल्शियम युक्त खाद्य पदार्थों पर ध्यान दें।";
+                wIntText.innerText = "खिचड़ी में शुद्ध घी, मैश किया हुआ केला या उबला हुआ अंडा शामिल करें।";
+            } else if (currentLang === 'bn') {
+                hVerdict.innerText = hClass === 'normal' ? "শিশুর শারীরিক বৃদ্ধি বর্তমানে সঠিক ট্র্যাকে রয়েছে।" : "উচ্চতা আদর্শ পরিমাপের চেয়ে কিছুটা কম রয়েছে। পুষ্টির দিকে নজর দিন।";
+                wVerdict.innerText = wClass === 'normal' ? "ওজন পরিমাপ বর্তমানে একদম সন্তোষজনক।" : "ওজন লক্ষ্যমাত্রার চেয়ে কম পাওয়া গেছে। ক্যালোৰি বাড়ানো প্রয়োজন।";
+                hIntText.innerText = "খাবারে ক্যালসিয়াম সমৃদ্ধ উপাদান (যেমন: রাগি মাল্ট, ছানা ও দুধ) যোগ করুন।";
+                wIntText.innerText = "খিচুড়িতে খাঁটি ঘি, পাকা কলা অথবা সেদ্ধ ডিম যোগ করা যেতে পারে।";
+            } else {
+                // English Fallbacks Default Set
+                if (hClass === 'normal') {
+                    hVerdict.innerText = `Skeletal growth tracks securely at the ${Math.round(hp)}th percentile. Linear development matches national standardized peer groups.`;
+                } else {
+                    hVerdict.innerText = `Height falls into lower standard bounds (${Math.round(hp)}th percentile). Requires careful nutritional optimization metrics.`;
+                }
+                hIntText.innerText = "Focus meal options on calcium and zinc-dense items (ragi malt, whole milk, paneer, and sesame).";
+                
+                if (wClass === 'normal') {
+                    wVerdict.innerText = `Body mass tracks optimally at the ${Math.round(wp)}th percentile, representing balanced daily macronutrient consumption.`;
+                } else {
+                    wVerdict.innerText = `Measured weight tracks lower than targeted parameters (${Math.round(wp)}th percentile), suggesting macro-energy gaps.`;
+                }
+                wIntText.innerText = "Safely introduce healthy calorie-dense additions like premium ghee in rice khichdi, mashed yellow bananas, or hard-boiled eggs.";
+            }
+
+            hBox.style.display = hClass === 'under' ? "block" : "none";
+            wBox.style.display = wClass === 'under' || wClass === 'over' ? "block" : "none";
+        }
+
+        function renderMilestoneTrack(currentAgeInMonths) {
+            const track = document.getElementById('milestoneTrack');
+            track.innerHTML = '';
+            let targetFocusNode = null;
+
+            developmentalMilestoneMatrix.forEach((phase) => {
+                const card = document.createElement('div');
+                card.className = "milestone-card";
+                
+                const matchesAgeWindow = (currentAgeInMonths >= phase.min && currentAgeInMonths <= phase.max);
+                if (matchesAgeWindow) {
+                    card.classList.add('active');
+                    targetFocusNode = card;
+                }
+
+                let bulletPoints = "";
+                phase.items.forEach(item => { bulletPoints += `<li>${item}</li>`; });
+
+                card.innerHTML = `
+                    <span class="milestone-age">${phase.label}</span>
+                    <h4>${phase.title}</h4>
+                    <ul>${bulletPoints}</ul>
+                `;
+                track.appendChild(card);
+            });
+
+            if (targetFocusNode) {
+                setTimeout(() => {
+                    track.scrollLeft = targetFocusNode.offsetLeft - track.offsetLeft - 20;
+                }, 350);
+            }
+        }
+
+        function initializeEmptyCharts() {
+            try {
+                const ctxH = document.getElementById('heightDedicatedChart').getContext('2d');
+                heightChartRef = new Chart(ctxH, {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            { label: '3rd Pct', data: [], borderColor: '#ef4444', borderDash: [5, 5], fill: false, pointRadius: 0 },
+                            { label: '15th Pct', data: [], borderColor: '#f59e0b', borderDash: [3, 3], fill: false, pointRadius: 0 },
+                            { label: '50th Pct', data: [], borderColor: '#94a3b8', fill: false, pointRadius: 0, borderWidth: 2 },
+                            { label: '85th Pct', data: [], borderColor: '#10b981', borderDash: [3, 3], fill: false, pointRadius: 0 },
+                            { label: '97th Pct', data: [], borderColor: '#4f46e5', borderDash: [5, 5], fill: false, pointRadius: 0 },
+                            { label: 'Current Profile', data: [], backgroundColor: '#4f46e5', borderColor: '#ffffff', borderWidth: 2, pointRadius: 7, type: 'scatter' }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: true, labels: { boxWidth: 6, font: { size: 9 } } } },
+                        scales: {
+                            x: { type: 'linear', min: 0, max: 120, title: { display: true, text: 'Age (Months)', font: { size: 10 } } },
+                            y: { title: { display: true, text: 'Height (cm)', font: { size: 10 } } }
+                        }
+                    }
+                });
+
+                const ctxW = document.getElementById('weightDedicatedChart').getContext('2d');
+                weightChartRef = new Chart(ctxW, {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            { label: '3rd Pct', data: [], borderColor: '#ef4444', borderDash: [5, 5], fill: false, pointRadius: 0 },
+                            { label: '15th Pct', data: [], borderColor: '#f59e0b', borderDash: [3, 3], fill: false, pointRadius: 0 },
+                            { label: '50th Pct', data: [], borderColor: '#94a3b8', fill: false, pointRadius: 0, borderWidth: 2 },
+                            { label: '85th Pct', data: [], borderColor: '#10b981', borderDash: [3, 3], fill: false, pointRadius: 0 },
+                            { label: '97th Pct', data: [], borderColor: '#4f46e5', borderDash: [5, 5], fill: false, pointRadius: 0 },
+                            { label: 'Current Profile', data: [], backgroundColor: '#10b981', borderColor: '#ffffff', borderWidth: 2, pointRadius: 7, type: 'scatter' }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: true, labels: { boxWidth: 6, font: { size: 9 } } } },
+                        scales: {
+                            x: { type: 'linear', min: 0, max: 120, title: { display: true, text: 'Age (Months)', font: { size: 10 } } },
+                            y: { title: { display: true, text: 'Weight (kg)', font: { size: 10 } } }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("Charting initialization exception safely structural bypassed:", e);
+            }
+        }
+
+        function refreshIndependentBiometricCharts(ageInMonths, userHeight, userWeight) {
+            const curves = extendedGrowthReferenceCurves[activeGender];
+
+            if (heightChartRef && heightChartRef.data) {
+                heightChartRef.data.datasets[0].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.height.p3[idx] }));
+                heightChartRef.data.datasets[1].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.height.p15[idx] }));
+                heightChartRef.data.datasets[2].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.height.p50[idx] }));
+                heightChartRef.data.datasets[3].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.height.p85[idx] }));
+                heightChartRef.data.datasets[4].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.height.p97[idx] }));
+                heightChartRef.data.datasets[5].data = [{ x: ageInMonths, y: userHeight }];
+                heightChartRef.update();
+            }
+
+            if (weightChartRef && weightChartRef.data) {
+                weightChartRef.data.datasets[0].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.weight.p3[idx] }));
+                weightChartRef.data.datasets[1].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.weight.p15[idx] }));
+                weightChartRef.data.datasets[2].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.weight.p50[idx] }));
+                weightChartRef.data.datasets[3].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.weight.p85[idx] }));
+                weightChartRef.data.datasets[4].data = referenceTimelineMonths.map((m, idx) => ({ x: m, y: curves.weight.p97[idx] }));
+                weightChartRef.data.datasets[5].data = [{ x: ageInMonths, y: userWeight }];
+                weightChartRef.update();
+            }
+        }
+
+        function syncAvatarThemeStyles() {
+            const containerBox = document.getElementById('avatarDisplayBox');
+            const icon = document.getElementById('avatarIcon');
+            const lbl = document.getElementById('avatarLabel');
+            const txtWeightSummary = document.getElementById('txtSummaryWeight');
+            
+            if(activeGender === 'girl') {
+                containerBox.style.background = "var(--girl-bg)";
+                containerBox.style.borderColor = "var(--girl-border)";
+                icon.innerText = "👧"; 
+                lbl.setAttribute('data-i18n', 'profileGirl');
+                lbl.innerText = currentLang === 'hi' ? "लड़की का प्रोफाइल" : (currentLang === 'bn' ? "ವಿವರ ಶೀಟ್" : "Baby Girl Profile");
+                lbl.style.color = "var(--girl-color)";
+                txtWeightSummary.style.color = "var(--girl-color)";
+                document.documentElement.style.setProperty('--primary', 'var(--girl-color)');
+            } else {
+                containerBox.style.background = "var(--boy-bg)";
+                containerBox.style.borderColor = "var(--boy-border)";
+                icon.innerText = "👦"; 
+                lbl.setAttribute('data-i18n', 'profileBoy');
+                lbl.innerText = currentLang === 'hi' ? "लड़के का प्रोफाइल" : (currentLang === 'bn' ? "শিশু পুত্রের প্রোফাইল" : "Baby Boy Profile");
+                lbl.style.color = "var(--boy-color)";
+                txtWeightSummary.style.color = "var(--boy-color)";
+                document.documentElement.style.setProperty('--primary', '#4f46e5');
+            }
+            applyTranslations();
+        }
+
+        // Configuration Event Bindings Layer
+        document.getElementById('dobInput').addEventListener('change', triggerPipelineRefresh);
+        document.getElementById('heightInput').addEventListener('input', triggerPipelineRefresh);
+        document.getElementById('heightUnit').addEventListener('change', triggerPipelineRefresh);
+        document.getElementById('weightInput').addEventListener('input', triggerPipelineRefresh);
+
+        // Language Selector Engine Change Binding
+        document.getElementById('langSelect').addEventListener('change', function(e) {
+            currentLang = e.target.value;
+            localStorage.setItem('iap_copilot_lang', currentLang);
+            applyTranslations();
+            triggerPipelineRefresh();
+        });
+
+        document.querySelectorAll('.gender-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                activeGender = this.getAttribute('data-gender');
+                syncAvatarThemeStyles();
+                triggerPipelineRefresh();
+            });
+        });
+
+        // Initialize execution chain cleanly
+        restoreInputsFromCache();
+        initializeEmptyCharts();
+        executeGrowthCoreAnalytics();
+        
+        setTimeout(() => {
+            const loader = document.getElementById('appLoaderOverlay');
+            if (loader) loader.classList.add('hidden');
+        }, 400);
+    });
+</script>
+
+</body>
+</html>

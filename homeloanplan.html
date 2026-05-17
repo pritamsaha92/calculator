@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Home Loan Strategy Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -111,12 +111,13 @@
             margin-bottom: 2rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--border-color);
+            gap: 1rem;
         }
 
         h1 { font-size: 1.75rem; font-weight: 700; }
         h2 { font-size: 1.15rem; margin-bottom: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
 
-        .header-actions { display: flex; gap: 0.75rem; }
+        .header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
         .btn {
             padding: 0.55rem 1.1rem;
@@ -129,6 +130,7 @@
             font-size: 0.9rem;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.25rem;
         }
         .btn:hover { background: var(--bg-base); }
@@ -143,10 +145,6 @@
             grid-template-columns: 450px 1fr;
             gap: 2rem;
             margin-bottom: 2rem;
-        }
-
-        @media (max-width: 1200px) {
-            .main-dashboard-grid { grid-template-columns: 1fr; }
         }
 
         .card {
@@ -194,8 +192,9 @@
             padding: 0.65rem 0.85rem;
             border-radius: 8px;
             margin-top: 0.75rem;
+            gap: 1rem;
         }
-        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
@@ -229,10 +228,6 @@
             display: grid;
             grid-template-columns: 1.2fr repeat(4, 1fr);
             gap: 1rem;
-        }
-
-        @media (max-width: 900px) {
-            .metrics-summary-banner { grid-template-columns: 1fr 1fr; }
         }
 
         .freedom-badge {
@@ -272,10 +267,6 @@
             grid-template-columns: 1.7fr 1.1fr;
             gap: 1.5rem;
             min-height: 250px;
-        }
-
-        @media (max-width: 850px) {
-            .visual-charts-grid { grid-template-columns: 1fr; }
         }
 
         .chart-frame { position: relative; width: 100%; height: 100%; min-height: 240px; }
@@ -344,6 +335,41 @@
         /* Print Specific Value Visual Blocks */
         .print-only-val { display: none; }
 
+        /* --- RESPONSIVE MEDIA QUERIES --- */
+        @media (max-width: 1200px) {
+            .main-dashboard-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+        }
+
+        @media (max-width: 900px) {
+            .metrics-summary-banner { grid-template-columns: repeat(2, 1fr); }
+            .freedom-badge { grid-column: span 2; }
+        }
+
+        @media (max-width: 850px) {
+            .visual-charts-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 0; }
+            .container { padding: 1rem; }
+            header { flex-direction: column; align-items: stretch; text-align: center; }
+            .header-actions { justify-content: center; width: 100%; }
+            .header-actions .btn { flex: 1; min-width: 120px; }
+            .card { padding: 1rem; border-radius: 8px; }
+            .milestone-strip { flex-direction: column; gap: 0.5rem; }
+            .table-section h2 { font-size: 1.1rem; }
+            table { font-size: 0.8rem; }
+            th, td { padding: 0.5rem; }
+            .lumpsum-input-container { flex-direction: column; align-items: stretch; gap: 0.25rem; }
+            .inline-lumpsum-input { width: 100%; }
+            .btn-add-lumpsum { width: 100%; height: 32px; }
+        }
+
+        @media (max-width: 48px) {
+            .metrics-summary-banner { grid-template-columns: 1fr; }
+            .freedom-badge { grid-column: span 1; }
+        }
+
         /* PDF Printing Optimization Settings */
         @media print {
             @page {
@@ -365,6 +391,7 @@
             header {
                 margin-bottom: 0.75rem !important;
                 padding-bottom: 0.25rem !important;
+                flex-direction: row !important;
             }
             .form-group {
                 margin-bottom: 0.25rem !important;
@@ -388,8 +415,10 @@
                 padding: 0.75rem !important;
             }
             .metrics-summary-banner {
+                grid-template-columns: 1.2fr repeat(4, 1fr) !important;
                 gap: 0.5rem !important;
             }
+            .freedom-badge { grid-column: auto !important; }
             .visual-charts-grid {
                 display: flex !important;
                 flex-direction: row !important;
@@ -414,6 +443,7 @@
             table {
                 width: 100% !important;
                 page-break-inside: auto;
+                font-size: 10px !important;
             }
             tr {
                 page-break-inside: avoid !important;
@@ -422,7 +452,6 @@
             th, td { 
                 padding: 4px 5px !important; 
                 border-bottom: 1px solid #94a3b8 !important; 
-                font-size: 10px !important;
                 color: #000000 !important;
             }
             .accumulated-pills-wrapper { display: none !important; }
@@ -579,7 +608,7 @@
                 </div>
 
                 <div class="switch-container" style="margin-top: 0; background: var(--bg-base); border: 1px dashed var(--border-color); flex-direction: column; align-items: stretch; gap: 0.5rem; padding: 0.75rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <span style="font-size: 1.25rem;">🚀</span>
                             <div>
@@ -601,7 +630,7 @@
     </div>
 
     <div class="table-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
             <h2>📊 Strategic Year-by-Year Ledger</h2>
             <span style="font-size: 0.8rem; color: var(--text-muted);">Type value and press enter or click '+' to continually stack multiple prepayment pools.</span>
         </div>
@@ -757,7 +786,6 @@
         }
     }
 
-    // FIXED: Simulation processing engine now natively models floating rate shock timelines
     function runSimulationProfile(configOverrides) {
         const principalBase = parseFloat(document.getElementById('loanAmount').value) || 0;
         const baseAnnualRate = parseFloat(document.getElementById('interestRate').value) || 0;
@@ -792,7 +820,6 @@
             totalMonthsCounter++;
             absoluteElapsedMonths++;
 
-            // Sync simulation vector directly with global floating rate shocks
             if (shockActive && currentYear >= shockYear) {
                 activeRate = shockRate;
             } else {
@@ -858,7 +885,6 @@
         const shockRate = parseFloat(document.getElementById('shockRate').value) || 0;
         const thirteenEmiActive = document.getElementById('thirteenEmiActive').checked;
 
-        // Baseline Vanilla Benchmark calculation
         let vanillaTotalInterest = 0;
         let vanillaTrackerBalance = principalBase;
         const vanillaMonthlyRate = (baseAnnualRate / 12) / 100;
@@ -879,7 +905,6 @@
             if (vanillaTrackerBalance <= 0) break;
         }
 
-        // Active Accelerated Matrix Calculator Simulation Processing Loop
         let activeBalance = principalBase;
         let activeRate = baseAnnualRate;
         let currentMonth = baseStartMonth;
@@ -983,7 +1008,6 @@
             }
         }
 
-        // Render Summary Performance Metrics
         let totalAcceleratedInterestPaid = 0;
         calendarYearLedgerCollection.forEach(item => totalAcceleratedInterestPaid += item.interestPaid);
 
@@ -998,7 +1022,6 @@
         document.getElementById('msTipping').innerText = tippingPointYearMarker || "N/A";
         document.getElementById('msHalfway').innerText = halfwayYearMarker || "N/A";
 
-        // Upgraded Single Line Closure Statement Processing
         if (totalMonthsCounter < 600) {
             const finalYears = Math.floor(totalMonthsCounter / 12);
             const finalMonths = totalMonthsCounter % 12;
@@ -1016,7 +1039,6 @@
             document.getElementById('closureStatementText').innerText = "Loan tracking exceeded timeline vectors.";
         }
 
-        // DYNAMIC INSIGHT 1: Step-Up EMI Slider Footnote Calculation Pipeline (Now with absolute Shock compatibility)
         const stepUpContainer = document.getElementById('stepUpInsightFootnote');
         if (stepUpRate > 0) {
             const simWithoutStepUp = runSimulationProfile({ annualIncrement: 0 });
@@ -1031,7 +1053,6 @@
             document.getElementById('p_annualIncrement').innerText = "0%";
         }
 
-        // DYNAMIC INSIGHT 2: 13th-EMI Integration Footnote Calculation Pipeline (Now with absolute Shock compatibility)
         const thirteenEmiContainer = document.getElementById('thirteenEmiInsightFootnote');
         if (thirteenEmiActive) {
             const simWithoutThirteen = runSimulationProfile({ thirteenEmiActive: false });

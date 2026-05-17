@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Salary & Surcharge Calculator</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #151f32;
+            --input-bg: rgba(11, 15, 25, 0.6);
+            --text-primary: #f1f5f9;
+            --text-secondary: #64748b;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --border-color: #22314d;
+            --shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --input-bg: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --accent-green: #16a34a;
+            --accent-blue: #2563eb;
+            --accent-purple: #7c3aed;
+            --accent-amber: #d97706;
+            --accent-red: #dc2626;
+            --border-color: #e2e8f0;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 16px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 1280px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin: 0 auto;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        header {
+            margin-bottom: 24px;
+            position: relative;
+            text-align: center;
+            padding: 0 40px;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 6px;
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+        }
+
+        .regime-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--input-bg);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .input-panel {
+            display: grid;
+            gap: 20px;
+        }
+
+        .input-group {
+            background: var(--input-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        label {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .ctc-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 12px;
+        }
+
+        .ctc-input-wrapper span {
+            color: var(--accent-green);
+            font-weight: 700;
+            margin-right: 4px;
+        }
+
+        input[type="number"] {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.05rem;
+            font-weight: 800;
+            width: 160px;
+            outline: none;
+            text-align: right;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 14px;
+            accent-color: var(--accent-blue);
+            cursor: pointer;
+        }
+
+        .deductions-panel {
+            display: none;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .deductions-panel.active {
+            display: flex;
+        }
+
+        .deductions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .deduction-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .deduction-item span {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .deduction-item input {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            outline: none;
+        }
+
+        .deduction-item input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--card-bg);
+        }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            /*  min-width: 500px;  */
+        }
+
+        .breakdown-table th, .breakdown-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        .breakdown-table th {
+            background: var(--input-bg);
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .breakdown-table td:nth-child(2), .breakdown-table td:nth-child(3) {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .breakdown-table tr.highlight {
+            background-color: rgba(16, 185, 129, 0.08);
+            font-weight: 800;
+            color: var(--accent-green);
+        }
+
+        .breakdown-table tr.highlight td {
+            border-bottom: none;
+            font-size: 1rem;
+        }
+
+        .analytics-side {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: sticky;
+            top: 16px;
+        }
+
+        .chart-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--input-bg);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 240px;
+            margin-bottom: 20px;
+        }
+
+        #chartCanvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        .legend {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .legend-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        
+        .legend-val {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Responsive Breakpoints and Design Fixes */
+        @media (max-width: 992px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            .analytics-side {
+                position: static;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .deductions-grid {
+                grid-template-columns: 1fr;
+            }
+            header {
+                padding: 0;
+            }
+            .theme-toggle {
+                position: relative;
+                top: 0;
+                right: 0;
+                transform: none;
+                margin: 12px auto 0 auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            .container {
+                padding: 14px;
+                border-radius: 16px;
+            }
+            header h1 {
+                font-size: 1.35rem;
+            }
+            .label-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .ctc-input-wrapper {
+                width: 100%;
+                justify-content: space-between;
+            }
+            input[type="number"] {
+                width: 100%;
+            }
+            .breakdown-table th, .breakdown-table td {
+                padding: 10px 8px;
+                font-size: 0.8rem;
+            }
+            .legend-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+            .legend-val {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>In-Hand Salary Calculator</h1>
+        <p>Comprehensive Assessment Engine with Surcharge, Deductions & PF Systems</p>
+        <button class="theme-toggle" id="themeToggleBtn" type="button" aria-label="Toggle Interface Theme">
+            <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+    </header>
+
+    <div class="regime-tabs">
+        <button class="tab-btn active" id="tabNewRegime" onclick="switchRegime('new')">New Tax Regime</button>
+        <button class="tab-btn" id="tabOldRegime" onclick="switchRegime('old')">Old Tax Regime</button>
+    </div>
+
+    <div class="layout">
+        <div class="input-panel">
+            <div class="input-group">
+                <div class="label-row">
+                    <label for="ctcInput">Annual Corporate CTC</label>
+                    <div class="ctc-input-wrapper">
+                        <span>₹</span>
+                        <input type="number" id="ctcInput" value="2000000" min="0" max="50000000" step="100000">
+                    </div>
+                </div>
+                <input type="range" id="ctcSlider" min="0" max="50000000" value="2000000" step="100000">
+            </div>
+
+            <div class="deductions-panel" id="oldRegimeDeductions">
+                <h3 style="font-size: 0.85rem; font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.02em;">Exemptions & Deductions (Old Regime)</h3>
+                <div class="deductions-grid">
+                    <div class="deduction-item">
+                        <span>Section 80C (Max ₹1.5L)</span>
+                        <input type="number" id="deduct80C" value="150000" min="0" max="150000">
+                    </div>
+                    <div class="deduction-item">
+                        <span>Section 80D (Mediclaim Max ₹1L)</span>
+                        <input type="number" id="deduct80D" value="25000" min="0" max="100000">
+                    </div>
+                    <div class="deduction-item">
+                        <span>Section 24(b) (Home Loan Max ₹2L)</span>
+                        <input type="number" id="deduct24b" value="0" min="0" max="200000">
+                    </div>
+                    <div class="deduction-item">
+                        <span>HRA Exemption (Sec 10-13A)</span>
+                        <input type="number" id="deductHra" value="0" min="0">
+                    </div>
+                    <div class="deduction-item">
+                        <span>Sec 80CCD(1B) (NPS Max ₹50k)</span>
+                        <input type="number" id="deductNps" value="0" min="0" max="50000">
+                    </div>
+                    <div class="deduction-item">
+                        <span>Sec 80E (Education Loan Interest)</span>
+                        <input type="number" id="deduct80E" value="0" min="0">
+                    </div>
+                    <div class="deduction-item">
+                        <span>Sec 80G (Charitable Donations)</span>
+                        <input type="number" id="deduct80G" value="0" min="0">
+                    </div>
+                    <div class="deduction-item">
+                        <span>LTA / Prof Tax / Other Exemptions</span>
+                        <input type="number" id="deductOther" value="0" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="breakdown-table">
+                    <thead>
+                        <tr>
+                            <th>Parameters</th>
+                            <th style="text-align: right;">Annual</th>
+                            <th style="text-align: right;">Monthly</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Gross Salary <small style="color:var(--text-secondary); display:block;">(CTC - Employer PF Component)</small></td>
+                            <td id="annualGross">0</td>
+                            <td id="monthlyGross">0</td>
+                        </tr>
+                        <tr>
+                            <td>Standard Deduction <small style="color:var(--text-secondary); display:block;" id="sdLabel">(Flat Exemption)</small></td>
+                            <td id="annualSd">0</td>
+                            <td id="monthlySd">0</td>
+                        </tr>
+                        <tr id="deductionsRowSummary" style="display: none;">
+                            <td>Total Custom Deductions <small style="color:var(--text-secondary); display:block;">(80C, 80D, HRA, NPS, etc.)</small></td>
+                            <td id="annualDeductionsTotal" style="color: var(--accent-blue);">0</td>
+                            <td id="monthlyDeductionsTotal" style="color: var(--accent-blue);">0</td>
+                        </tr>
+                        <tr style="background: var(--input-bg)">
+                            <td>Taxable Income Base <small style="color:var(--text-secondary); display:block;">(Net Fiscal Yield)</small></td>
+                            <td id="annualTaxable" style="font-weight:700;">0</td>
+                            <td id="monthlyTaxable" style="font-weight:700;">0</td>
+                        </tr>
+                        <tr>
+                            <td>Employer PF Contribution <small style="color:var(--text-secondary); display:block;">(12% of Basic Structure)</small></td>
+                            <td id="annualEmployerPf">0</td>
+                            <td id="monthlyEmployerPf">0</td>
+                        </tr>
+                        <tr>
+                            <td>Employee PF Deduction <small style="color:var(--text-secondary); display:block;">(12% of Basic Structure)</small></td>
+                            <td id="annualEmployeePf">0</td>
+                            <td id="monthlyEmployeePf">0</td>
+                        </tr>
+                        <tr>
+                            <td>Base Income Tax <small style="color:var(--text-secondary); display:block;" id="baseTaxLabel">(Progressive Slabs)</small></td>
+                            <td id="annualBaseTax">0</td>
+                            <td id="monthlyBaseTax">0</td>
+                        </tr>
+                        <tr>
+                            <td>Surcharge <small style="color:var(--text-secondary); display:inline;" id="surchargeLabel">(0%)</small></td>
+                            <td id="annualSurcharge" style="color: var(--accent-purple);">0</td>
+                            <td id="monthlySurcharge" style="color: var(--accent-purple);">0</td>
+                        </tr>
+                        <tr>
+                            <td>Health & Education Cess <small style="color:var(--text-secondary); display:block;">(4% on Tax + Surcharge)</small></td>
+                            <td id="annualCess" style="color: var(--accent-amber);">0</td>
+                            <td id="monthlyCess" style="color: var(--accent-amber);">0</td>
+                        </tr>
+                        <tr class="highlight">
+                            <td>Net Take-Home (In-Hand)</td>
+                            <td id="annualInHand">0</td>
+                            <td id="monthlyInHand">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="analytics-side">
+            <div class="chart-panel">
+                <div class="canvas-container">
+                    <canvas id="chartCanvas" width="300" height="300"></canvas>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="color-dot" style="background-color: var(--accent-green);"></div>
+                            <span>Net Take-Home</span>
+                        </div>
+                        <span class="legend-val" id="legInHand">₹0</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="color-dot" style="background-color: var(--accent-red);"></div>
+                            <span>Total Fiscal Tax</span>
+                        </div>
+                        <span class="legend-val" id="legTax" style="color: var(--accent-red);">₹0</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="color-dot" style="background-color: var(--accent-blue);"></div>
+                            <span>Employee PF Contribution</span>
+                        </div>
+                        <span class="legend-val" id="legEmpPf">₹0</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="color-dot" style="background-color: var(--accent-amber);"></div>
+                            <span>Employer PF Component</span>
+                        </div>
+                        <span class="legend-val" id="legEmpyrPf">₹0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctcInput = document.getElementById('ctcInput');
+    const ctcSlider = document.getElementById('ctcSlider');
+    const canvas = document.getElementById('chartCanvas');
+    const ctx = canvas.getContext('2d');
+    const htmlEl = document.documentElement;
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+
+    // Deduction Node Targets
+    const deduct80C = document.getElementById('deduct80C');
+    const deduct80D = document.getElementById('deduct80D');
+    const deduct24b = document.getElementById('deduct24b');
+    const deductHra = document.getElementById('deductHra');
+    const deductNps = document.getElementById('deductNps');
+    const deduct80E = document.getElementById('deduct80E');
+    const deduct80G = document.getElementById('deduct80G');
+    const deductOther = document.getElementById('deductOther');
+
+    const sunSvg = `<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>`;
+    const moonSvg = `<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>`;
+
+    let activeRegime = 'new';
+
+    const elements = {
+        annualGross: document.getElementById('annualGross'),
+        monthlyGross: document.getElementById('monthlyGross'),
+        annualSd: document.getElementById('annualSd'),
+        monthlySd: document.getElementById('monthlySd'),
+        sdLabel: document.getElementById('sdLabel'),
+        deductionsRowSummary: document.getElementById('deductionsRowSummary'),
+        annualDeductionsTotal: document.getElementById('annualDeductionsTotal'),
+        monthlyDeductionsTotal: document.getElementById('monthlyDeductionsTotal'),
+        annualTaxable: document.getElementById('annualTaxable'),
+        monthlyTaxable: document.getElementById('monthlyTaxable'),
+        annualEmployerPf: document.getElementById('annualEmployerPf'),
+        monthlyEmployerPf: document.getElementById('monthlyEmployerPf'),
+        annualEmployeePf: document.getElementById('annualEmployeePf'),
+        monthlyEmployeePf: document.getElementById('monthlyEmployeePf'),
+        baseTaxLabel: document.getElementById('baseTaxLabel'),
+        annualBaseTax: document.getElementById('annualBaseTax'),
+        monthlyBaseTax: document.getElementById('monthlyBaseTax'),
+        surchargeLabel: document.getElementById('surchargeLabel'),
+        annualSurcharge: document.getElementById('annualSurcharge'),
+        monthlySurcharge: document.getElementById('monthlySurcharge'),
+        annualCess: document.getElementById('annualCess'),
+        monthlyCess: document.getElementById('monthlyCess'),
+        annualInHand: document.getElementById('annualInHand'),
+        monthlyInHand: document.getElementById('monthlyInHand'),
+        legInHand: document.getElementById('legInHand'),
+        legTax: document.getElementById('legTax'),
+        legEmpPf: document.getElementById('legEmpPf'),
+        legEmpyrPf: document.getElementById('legEmpyrPf')
+    };
+
+    function initTheme() {
+        const activeTheme = localStorage.getItem('salary-calc-theme') || 'dark';
+        htmlEl.setAttribute('data-theme', activeTheme);
+        themeIcon.innerHTML = activeTheme === 'dark' ? sunSvg : moonSvg;
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        const targetTheme = htmlEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        htmlEl.setAttribute('data-theme', targetTheme);
+        localStorage.setItem('salary-calc-theme', targetTheme);
+        themeIcon.innerHTML = targetTheme === 'dark' ? sunSvg : moonSvg;
+        processCalculations();
+    });
+
+    function cacheStateData() {
+        const dataPacket = {
+            activeRegime,
+            ctc: ctcInput.value,
+            v80c: deduct80C.value,
+            v80d: deduct80D.value,
+            v24b: deduct24b.value,
+            vHra: deductHra.value,
+            vNps: deductNps.value,
+            v80e: deduct80E.value,
+            v80g: deduct80G.value,
+            vOth: deductOther.value
+        };
+        localStorage.setItem('salary-calc-state-cache', JSON.stringify(dataPacket));
+    }
+
+    function rehydrateCachedState() {
+        const cachedJson = localStorage.getItem('salary-calc-state-cache');
+        if (!cachedJson) return;
+        try {
+            const parsed = JSON.parse(cachedJson);
+            if (parsed.ctc !== undefined) {
+                ctcInput.value = parsed.ctc;
+                ctcSlider.value = parsed.ctc;
+            }
+            if (parsed.v80c !== undefined) deduct80C.value = parsed.v80c;
+            if (parsed.v80d !== undefined) deduct80D.value = parsed.v80d;
+            if (parsed.v24b !== undefined) deduct24b.value = parsed.v24b;
+            if (parsed.vHra !== undefined) deductHra.value = parsed.vHra;
+            if (parsed.vNps !== undefined) deductNps.value = parsed.vNps;
+            if (parsed.v80e !== undefined) deduct80E.value = parsed.v80e;
+            if (parsed.v80g !== undefined) deduct80G.value = parsed.v80g;
+            if (parsed.vOth !== undefined) deductOther.value = parsed.vOth;
+            if (parsed.activeRegime !== undefined) {
+                activeRegime = parsed.activeRegime;
+            }
+        } catch (e) {
+            console.error("State validation parsing exception error", e);
+        }
+    }
+
+    function switchRegime(regime) {
+        activeRegime = regime;
+        cacheStateData();
+        updateRegimeUiState();
+        processCalculations();
+    }
+
+    function updateRegimeUiState() {
+        document.getElementById('tabNewRegime').classList.toggle('active', activeRegime === 'new');
+        document.getElementById('tabOldRegime').classList.toggle('active', activeRegime === 'old');
+        document.getElementById('oldRegimeDeductions').classList.toggle('active', activeRegime === 'old');
+        elements.deductionsRowSummary.style.display = activeRegime === 'old' ? 'table-row' : 'none';
+        
+        if (activeRegime === 'new') {
+            elements.annualSd.innerText = "75,000";
+            elements.monthlySd.innerText = "6,250";
+            elements.baseTaxLabel.innerText = "(New Progressive Slabs)";
+        } else {
+            elements.annualSd.innerText = "50,000";
+            elements.monthlySd.innerText = "4,167";
+            elements.baseTaxLabel.innerText = "(Old Regime Slabs)";
+        }
+    }
+
+    function formatCurrency(val) {
+        return Math.round(val).toLocaleString('en-IN');
+    }
+
+    function getBaseTaxNew(income) {
+        let tax = 0;
+        if (income > 2400000) {
+            tax += (income - 2400000) * 0.30;
+            tax += 300000;
+        } else if (income > 2000000) {
+            tax += (income - 2000000) * 0.25;
+            tax += 200000;
+        } else if (income > 1600000) {
+            tax += (income - 1600000) * 0.20;
+            tax += 120000;
+        } else if (income > 1200000) {
+            tax += (income - 1200000) * 0.15;
+            tax += 60000;
+        } else if (income > 800000) {
+            tax += (income - 800000) * 0.10;
+            tax += 20000;
+        } else if (income > 400000) {
+            tax += (income - 400000) * 0.05;
+        }
+        return tax;
+    }
+
+    function getBaseTaxOld(income) {
+        let tax = 0;
+        if (income > 1000000) {
+            tax += (income - 1000000) * 0.30;
+            tax += 112500; 
+        } else if (income > 500000) {
+            tax += (income - 500000) * 0.20;
+            tax += 12500;
+        } else if (income > 250000) {
+            tax += (income - 250000) * 0.05;
+        }
+        return tax;
+    }
+
+    function calculateDeepTax(taxableIncome, regime) {
+        if (regime === 'new' && taxableIncome <= 1200000) {
+            return { baseTax: 0, surcharge: 0, cess: 0, totalTax: 0, rateLabel: "(0%)" };
+        }
+        if (regime === 'old' && taxableIncome <= 500000) {
+            return { baseTax: 0, surcharge: 0, cess: 0, totalTax: 0, rateLabel: "(0%)" };
+        }
+
+        let baseTax = regime === 'new' ? getBaseTaxNew(taxableIncome) : getBaseTaxOld(taxableIncome);
+
+        // Section 87A Marginal Rebate Protection Rule Architecture (New Regime 12L Bound)
+        if (regime === 'new' && taxableIncome <= 1350000) {
+            let excessOver12L = taxableIncome - 1200000;
+            if (baseTax > excessOver12L) {
+                baseTax = excessOver12L;
+            }
+        }
+
+        let surchargeRate = 0;
+        let limitBoundary = 0;
+        let rateLabel = "(0%)";
+
+        if (taxableIncome > 50000000) { // > 5 Crore
+            surchargeRate = regime === 'new' ? 0.25 : 0.37;
+            limitBoundary = 50000000;
+            rateLabel = regime === 'new' ? "(25%)" : "(37%)";
+        } else if (taxableIncome > 20000000) { // > 2 Crore
+            surchargeRate = 0.25;
+            limitBoundary = 20000000;
+            rateLabel = "(25%)";
+        } else if (taxableIncome > 10000000) { // > 1 Crore
+            surchargeRate = 0.15;
+            limitBoundary = 10000000;
+            rateLabel = "(15%)";
+        } else if (taxableIncome > 5000000) { // > 50 Lakhs
+            surchargeRate = 0.10;
+            limitBoundary = 5000000;
+            rateLabel = "(10%)";
+        }
+
+        let surcharge = baseTax * surchargeRate;
+        let taxBeforeCess = baseTax + surcharge;
+
+        // Surcharge Marginal Relief Pipeline
+        if (limitBoundary > 0) {
+            let baseTaxAtLimit = regime === 'new' ? getBaseTaxNew(limitBoundary) : getBaseTaxOld(limitBoundary);
+            let surchargeRateAtLimit = 0;
+            
+            if (limitBoundary === 50000000) surchargeRateAtLimit = regime === 'new' ? 0.25 : 0.25;
+            else if (limitBoundary === 20000000) surchargeRateAtLimit = 0.15;
+            else if (limitBoundary === 10000000) surchargeRateAtLimit = 0.10;
+
+            let totalTaxAtLimitBeforeCess = baseTaxAtLimit + (baseTaxAtLimit * surchargeRateAtLimit);
+            let excessIncomeOverLimit = taxableIncome - limitBoundary;
+            let maxTaxAllowedBeforeCess = totalTaxAtLimitBeforeCess + excessIncomeOverLimit;
+
+            if (taxBeforeCess > maxTaxAllowedBeforeCess) {
+                taxBeforeCess = maxTaxAllowedBeforeCess;
+                surcharge = Math.max(0, taxBeforeCess - baseTax);
+                rateLabel = "(Relief Applied)";
+            }
+        }
+
+        let cess = taxBeforeCess * 0.04;
+        let totalTax = taxBeforeCess + cess;
+
+        return { baseTax, surcharge, cess, totalTax, rateLabel };
+    }
+
+    function processCalculations() {
+        const ctc = parseFloat(ctcInput.value) || 0;
+
+        const basicSalary = ctc * 0.50; 
+        const employerPF = basicSalary * 0.12;
+        const employeePF = basicSalary * 0.12;
+        const grossSalary = Math.max(0, ctc - employerPF);
+        
+        let standardDeduction = activeRegime === 'new' ? 75000 : 50000;
+        let totalDeductionsDeclared = 0;
+
+        if (activeRegime === 'old') {
+            const v80c = parseFloat(deduct80C.value) || 0;
+            const v80d = parseFloat(deduct80D.value) || 0;
+            const v24b = parseFloat(deduct24b.value) || 0;
+            const vHra = parseFloat(deductHra.value) || 0;
+            const vNps = parseFloat(deductNps.value) || 0;
+            const v80e = parseFloat(deduct80E.value) || 0;
+            const v80g = parseFloat(deduct80G.value) || 0;
+            const vOth = parseFloat(deductOther.value) || 0;
+            
+            totalDeductionsDeclared = v80c + v80d + v24b + vHra + vNps + v80e + v80g + vOth;
+            
+            elements.annualDeductionsTotal.innerText = formatCurrency(totalDeductionsDeclared);
+            elements.monthlyDeductionsTotal.innerText = formatCurrency(totalDeductionsDeclared / 12);
+        }
+
+        const taxableIncome = Math.max(0, grossSalary - standardDeduction - totalDeductionsDeclared);
+        const taxMetrics = calculateDeepTax(taxableIncome, activeRegime);
+        const netInHandAnnual = Math.max(0, grossSalary - employeePF - taxMetrics.totalTax);
+
+        // Core Table DOM Interpolation
+        elements.annualGross.innerText = formatCurrency(grossSalary);
+        elements.monthlyGross.innerText = formatCurrency(grossSalary / 12);
+        
+        elements.annualTaxable.innerText = formatCurrency(taxableIncome);
+        elements.monthlyTaxable.innerText = formatCurrency(taxableIncome / 12);
+
+        elements.annualEmployerPf.innerText = formatCurrency(employerPF);
+        elements.monthlyEmployerPf.innerText = formatCurrency(employerPF / 12);
+        
+        elements.annualEmployeePf.innerText = formatCurrency(employeePF);
+        elements.monthlyEmployeePf.innerText = formatCurrency(employeePF / 12);
+
+        elements.annualBaseTax.innerText = formatCurrency(taxMetrics.baseTax);
+        elements.monthlyBaseTax.innerText = formatCurrency(taxMetrics.baseTax / 12);
+
+        elements.surchargeLabel.innerText = taxMetrics.rateLabel;
+        elements.annualSurcharge.innerText = formatCurrency(taxMetrics.surcharge);
+        elements.monthlySurcharge.innerText = formatCurrency(taxMetrics.surcharge / 12);
+
+        elements.annualCess.innerText = formatCurrency(taxMetrics.cess);
+        elements.monthlyCess.innerText = formatCurrency(taxMetrics.cess / 12);
+
+        elements.annualInHand.innerText = formatCurrency(netInHandAnnual);
+        elements.monthlyInHand.innerText = formatCurrency(netInHandAnnual / 12);
+
+        // Analytics Cards Projection Mapping
+        elements.legInHand.innerText = "₹" + formatCurrency(netInHandAnnual / 12) + "/mo";
+        elements.legTax.innerText = "₹" + formatCurrency(taxMetrics.totalTax / 12) + "/mo";
+        elements.legEmpPf.innerText = "₹" + formatCurrency(employeePF / 12) + "/mo";
+        elements.legEmpyrPf.innerText = "₹" + formatCurrency(employerPF / 12) + "/mo";
+
+        renderDoughnut(netInHandAnnual, taxMetrics.totalTax, employeePF, employerPF);
+    }
+
+    function renderDoughnut(inHand, tax, empPf, empyrPf) {
+        const total = inHand + tax + empPf + empyrPf;
+        const segments = [
+            { value: inHand, color: '#10b981' },
+            { value: tax, color: '#ef4444' },
+            { value: empPf, color: '#3b82f6' },
+            { value: empyrPf, color: '#f59e0b' }
+        ];
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.min(centerX, centerY) * 0.88;
+        const innerRadius = radius * 0.68;
+
+        let startAngle = -Math.PI / 2;
+
+        segments.forEach(seg => {
+            if (seg.value <= 0 || total === 0) return;
+            const segAngle = (seg.value / total) * 2 * Math.PI;
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, startAngle, startAngle + segAngle);
+            ctx.arc(centerX, centerY, innerRadius, startAngle + segAngle, startAngle, true);
+            ctx.closePath();
+            ctx.fillStyle = seg.color;
+            ctx.fill();
+
+            startAngle += segAngle;
+        });
+
+        const isDark = htmlEl.getAttribute('data-theme') !== 'light';
+        ctx.fillStyle = isDark ? '#64748b' : '#475569';
+        ctx.font = '700 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('MONTHLY IN-HAND', centerX, centerY - 14);
+
+        ctx.fillStyle = '#10b981';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('₹' + formatCurrency(inHand / 12), centerX, centerY + 12);
+    }
+
+    // Input Synchronization Events Layout
+    ctcInput.addEventListener('input', () => {
+        let val = parseFloat(ctcInput.value);
+        if (isNaN(val)) val = 0;
+        if (val > 50000000) val = 50000000;
+        ctcInput.value = val;
+        ctcSlider.value = val;
+        cacheStateData();
+        processCalculations();
+    });
+
+    ctcSlider.addEventListener('input', () => {
+        ctcInput.value = ctcSlider.value;
+        cacheStateData();
+        processCalculations();
+    });
+
+    const formDeductionNodes = [deduct80C, deduct80D, deduct24b, deductHra, deductNps, deduct80E, deduct80G, deductOther];
+    formDeductionNodes.forEach(node => {
+        node.addEventListener('input', () => {
+            cacheStateData();
+            processCalculations();
+        });
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        rehydrateCachedState();
+        initTheme();
+        updateRegimeUiState();
+        processCalculations();
+    });
+</script>
+</body>
+</html>

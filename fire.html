@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Holistic FIRE Discovery Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#4f46e5; --primary-hover:#4338ca;
+  --bg-main:linear-gradient(135deg,#f0f9ff 0%,#e0e7ff 100%);
+  --surface:#ffffff; --text-main:#1e293b; --text-muted:#64748b;
+  --border:#cbd5e1;
+  --success-bg:#dcfce7; --success-text:#115e59;
+  --warning-bg:#fef3c7; --warning-text:#92400e;
+  --error-bg:#fee2e2; --error-text:#991b1b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-main);color:var(--text-main);min-height:100vh;padding:20px;display:flex;justify-content:center;align-items:flex-start;}
+.fire-container{background:var(--surface);max-width:1440px;width:100%;border-radius:24px;box-shadow:0 20px 25px -5px rgba(0,0,0,.05);border:1px solid rgba(255,255,255,.5);display:grid;grid-template-columns:1.15fr 0.85fr;}
+.input-panel{padding:40px;border-right:1px solid #e2e8f0;max-height:96vh;overflow-y:auto;}
+.output-panel{padding:40px;background:#f8fafc;display:flex;flex-direction:column;max-height:96vh;overflow-y:auto;border-top-right-radius:24px;border-bottom-right-radius:24px;}
+header{margin-bottom:28px;}
+h1{font-size:1.6rem;font-weight:700;color:#0f172a;}
+.subtitle{color:var(--text-muted);font-size:.9rem;margin-top:4px;}
+.section-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:24px;}
+.section-title{font-size:1.05rem;font-weight:600;margin-bottom:18px;color:#0f172a;display:flex;justify-content:space-between;align-items:center;}
+.grid-inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full-width{grid-column:span 2;}
+.checkbox-group{flex-direction:row;align-items:center;gap:10px;cursor:pointer;padding:4px 0;}
+.checkbox-group input{width:18px;height:18px;accent-color:var(--primary);cursor:pointer;}
+label{font-size:.85rem;font-weight:500;color:#475569;}
+input[type="number"],input[type="text"],select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:.95rem;color:var(--text-main);background:#fff;}
+select{cursor:pointer;}
+input[readonly]{background:#f8fafc;color:#475569;cursor:not-allowed;border-color:#e2e8f0;font-weight:600;}
+.collapsible-trigger{background:none;border:none;color:var(--primary);font-size:.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.collapsible-content{display:none;margin-top:18px;padding-top:18px;border-top:1px dashed #e2e8f0;}
+.collapsible-content.active{display:block;}
+.asset-row-grid{display:grid;grid-template-columns:1.2fr 1fr 0.8fr;gap:12px;align-items:center;margin-bottom:12px;}
+.asset-row-title{font-size:.85rem;font-weight:600;color:#334155;}
+.conditional-housing-panel{background:#fafafa;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:14px;display:none;flex-direction:column;gap:14px;}
+.conditional-housing-panel.active{display:flex;}
+.purchase-mode-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.purchase-mode-badge{font-size:.75rem;font-weight:700;background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:20px;display:inline-block;margin-left:6px;}
+.emi-fields{display:none;grid-template-columns:1fr 1fr;gap:14px;}
+.emi-fields.active{display:grid;}
+.info-badge{font-size:.78rem;color:#7c3aed;background:#f5f3ff;padding:8px 12px;border-radius:8px;border:1px solid #ddd6fe;margin-top:6px;}
+.table-header{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:12px;margin-bottom:8px;padding:0 4px;}
+.table-header span{font-size:.75rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);}
+.dynamic-row{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:12px;align-items:center;margin-bottom:10px;}
+.add-btn{background:#f5f3ff;color:var(--primary);border:1px dashed var(--primary);padding:10px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem;width:100%;margin-top:8px;}
+.delete-btn{background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.2rem;}
+/* Output panel */
+.kpi-block{background:#0f172a;color:#fff;border-radius:18px;padding:28px;text-align:center;margin-bottom:24px;}
+.kpi-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.kpi-label{font-size:.8rem;text-transform:uppercase;color:#94a3b8;}
+.kpi-value{font-size:2rem;font-weight:700;margin-top:6px;}
+.kpi-value.highlight{color:#818cf8;}
+.kpi-status{font-size:.95rem;font-weight:600;padding:12px 16px;border-radius:8px;line-height:1.4;}
+.kpi-status.success{background-color:var(--success-bg);color:var(--success-text);border:1px solid #bbf7d0;}
+.kpi-status.error{background-color:var(--error-bg);color:var(--error-text);border:1px solid #fca5a5;}
+.metrics-subgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.sub-metric{background:#fff;padding:16px;border-radius:12px;border:1px solid #e2e8f0;}
+.sub-metric-label{font-size:.8rem;color:var(--text-muted);}
+.sub-metric-val{font-size:1.15rem;font-weight:600;color:#0f172a;margin-top:4px;}
+/* Charts */
+.chart-frame{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px;}
+.chart-bars{display:flex;align-items:flex-end;gap:4px;height:160px;border-bottom:2px solid #e2e8f0;padding-bottom:4px;overflow-x:auto;}
+.chart-bar-wrapper{flex:1;min-width:12px;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative;}
+.bar{width:100%;background:#cbd5e1;border-radius:3px 3px 0 0;min-height:2px;transition:height .3s;}
+.bar.retired{background:#10b981;}
+.bar.milestone-dip{background:#f59e0b;}
+.flow-bar-container{display:flex;width:100%;gap:1px;height:100%;align-items:flex-end;}
+.flow-sub-bar{width:50%;min-height:1px;}
+.flow-sub-bar.inflow{background:#6366f1;}
+.flow-sub-bar.outflow{background:#f43f5e;}
+.chart-label-x{font-size:.55rem;color:var(--text-muted);margin-top:6px;transform:rotate(-45deg);white-space:nowrap;}
+.tooltip{position:absolute;bottom:105%;background:#0f172a;color:#fff;padding:6px 10px;border-radius:6px;font-size:.75rem;white-space:nowrap;visibility:hidden;opacity:0;z-index:10;pointer-events:none;box-shadow:0 4px 6px -1px rgba(0,0,0,.1);}
+.chart-bar-wrapper:hover .tooltip{visibility:visible;opacity:1;}
+
+/* ── Projection Table ─────────────────────────────────────── */
+.proj-frame{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px;}
+.proj-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.proj-summary-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;}
+.proj-summary-label{font-size:.75rem;color:var(--text-muted);font-weight:500;}
+.proj-summary-val{font-size:1rem;font-weight:700;color:#0f172a;margin-top:3px;}
+.proj-summary-sub{font-size:.72rem;color:var(--text-muted);margin-top:1px;}
+.proj-expand-btn{width:100%;background:none;border:1px solid #e2e8f0;border-radius:8px;padding:9px 14px;font-size:.85rem;font-weight:600;color:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:14px;}
+.proj-expand-btn:hover{background:#f5f3ff;}
+.proj-table-wrap{display:none;overflow-x:auto;max-height:340px;overflow-y:auto;}
+.proj-table-wrap.active{display:block;}
+.proj-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.proj-table th{background:#f1f5f9;color:#475569;font-weight:600;text-transform:uppercase;font-size:.7rem;padding:8px 10px;text-align:right;position:sticky;top:0;border-bottom:2px solid #e2e8f0;}
+.proj-table th:first-child{text-align:left;}
+.proj-table td{padding:7px 10px;text-align:right;border-bottom:1px solid #f1f5f9;color:#1e293b;}
+.proj-table td:first-child{text-align:left;font-weight:600;}
+.proj-table tr.fire-row td{background:#fffbeb;font-weight:700;}
+.proj-table tr.fire-row td:first-child{color:#d97706;}
+.proj-table tr.retired-row td{background:#f0fdf4;}
+.proj-table tr.retired-row td:first-child{color:#059669;}
+.proj-table tr.danger-row td{background:#fff1f2;}
+.proj-table tr.danger-row td:first-child{color:#e11d48;}
+
+@media(max-width:900px){
+  body{padding:0;}
+  .fire-container{grid-template-columns:1fr!important;border-radius:0;min-height:100vh;}
+  .input-panel,.output-panel{padding:24px;max-height:none;overflow-y:visible;border-right:none;border-radius:0;}
+  .grid-inputs,.asset-row-grid,.purchase-mode-row,.emi-fields,.proj-summary{grid-template-columns:1fr;}
+  .table-header{display:none;}
+  .dynamic-row{grid-template-columns:1fr;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;position:relative;}
+  .delete-btn{position:absolute;top:8px;right:8px;}
+}
+</style>
+</head>
+<body>
+<main class="fire-container">
+
+<!-- ═══ INPUT PANEL ═══════════════════════════════════════════════════ -->
+<section class="input-panel">
+  <header>
+    <h1>🔥 Holistic FIRE Discovery Engine</h1>
+    <p class="subtitle">Extract financial autonomy metrics with separated portfolio engines and income hard-stops.</p>
+  </header>
+
+  <!-- Inflows & Horizons -->
+  <div class="section-card">
+    <div class="section-title">Inflows &amp; Horizons</div>
+    <div class="grid-inputs">
+      <div class="form-group"><label for="monthlyIncome">Current Monthly Net Income (₹)</label><input type="number" id="monthlyIncome" value="150000"></div>
+      <div class="form-group"><label for="incomeIncrement">Expected Annual Salary Hike (%)</label><input type="number" id="incomeIncrement" value="8" step="0.5"></div>
+      <div class="form-group"><label for="inflation">Assumed General Inflation Rate (%)</label><input type="number" id="inflation" value="6" step="0.1"></div>
+      <div class="form-group"><label for="taxRate">Post-FIRE Asset Tax Drag (%)</label><input type="number" id="taxRate" value="15" step="0.5"></div>
+      <div class="form-group"><label for="currentAge">Current Age</label><input type="number" id="currentAge" value="30"></div>
+      <div class="form-group"><label for="lifeExpectancy">Life Expectancy Age</label><input type="number" id="lifeExpectancy" value="85"></div>
+    </div>
+  </div>
+
+  <!-- Outflows -->
+  <div class="section-card">
+    <div class="section-title">
+      <span>Monthly Outflows &amp; Commitments</span>
+      <button class="collapsible-trigger" onclick="toggleSection('expenseCollapsible')">✏️ Itemize Segments</button>
+    </div>
+    <div class="form-group"><label for="masterExpense">Aggregated Monthly Expenses (₹)</label><input type="number" id="masterExpense" value="60000"></div>
+    <div id="expenseCollapsible" class="collapsible-content">
+      <div class="grid-inputs" style="margin-top:10px;">
+        <div class="form-group"><label>Rent (₹/mo)</label><input type="number" id="rentInput" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+        <div class="form-group"><label>Bills &amp; Utilities (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+        <div class="form-group"><label>Food &amp; Groceries (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+        <div class="form-group"><label>Transport &amp; Fuel (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+        <div class="form-group"><label>Car EMI &amp; Upkeep (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+        <div class="form-group"><label>Maid &amp; Support (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Investment Strategy -->
+  <div class="section-card">
+    <div class="section-title">Investment Strategy (Fresh Cash Flow)</div>
+    <div class="grid-inputs">
+      <div class="form-group"><label for="investmentOverride">Computed Monthly Investable (₹)</label><input type="number" id="investmentOverride" value="90000" readonly></div>
+      <div class="form-group"><label for="cashBufferPct">Emergency/Savings Buffer (%)</label><input type="number" id="cashBufferPct" value="10" min="0" max="90"></div>
+      <div class="form-group"><label for="workingRoi">Pre-FIRE Investment ROI (%)</label><input type="number" id="workingRoi" value="12" step="0.5"></div>
+      <div class="form-group"><label for="postFireRoi">Post-FIRE Portfolio ROI (%)</label><input type="number" id="postFireRoi" value="8" step="0.5"></div>
+    </div>
+  </div>
+
+  <!-- Existing Assets -->
+  <div class="section-card">
+    <div class="section-title">
+      <span>Existing Asset Portfolio</span>
+      <button class="collapsible-trigger" onclick="toggleSection('portfolioCollapsible')">🏦 Itemized Assets</button>
+    </div>
+    <div class="grid-inputs">
+      <div class="form-group"><label>Total Existing Wealth (₹)</label><input type="number" id="masterAssets" value="0" readonly></div>
+      <div class="form-group"><label>Blended CAGR (%)</label><input type="text" id="blendedAssetRoi" value="0.0%" readonly></div>
+    </div>
+    <div id="portfolioCollapsible" class="collapsible-content">
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 0.8fr;gap:12px;margin-bottom:8px;opacity:.7;">
+        <span style="font-size:.75rem;font-weight:600;">Asset Segment</span>
+        <span style="font-size:.75rem;font-weight:600;">Current Balance (₹)</span>
+        <span style="font-size:.75rem;font-weight:600;">Expected ROI (%)</span>
+      </div>
+      <div class="asset-row-grid"><div class="asset-row-title">Debt Instruments</div><input type="number" value="500000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="6" class="itemized-asset-roi" oninput="calculateFire()"></div>
+      <div class="asset-row-grid"><div class="asset-row-title">Direct Equity</div><input type="number" value="1000000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="13" class="itemized-asset-roi" oninput="calculateFire()"></div>
+      <div class="asset-row-grid"><div class="asset-row-title">Mutual Funds (MF)</div><input type="number" value="500000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="12" class="itemized-asset-roi" oninput="calculateFire()"></div>
+      <div class="asset-row-grid"><div class="asset-row-title">EPF Balances</div><input type="number" value="300000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="7.1" class="itemized-asset-roi" oninput="calculateFire()"></div>
+      <div class="asset-row-grid"><div class="asset-row-title">NPS Holdings</div><input type="number" value="100000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="9.5" class="itemized-asset-roi" oninput="calculateFire()"></div>
+      <div class="asset-row-grid"><div class="asset-row-title">Gold / Commodities</div><input type="number" value="100000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="8" class="itemized-asset-roi" oninput="calculateFire()"></div>
+    </div>
+  </div>
+
+  <!-- Home Ownership Guardrail -->
+  <div class="section-card">
+    <div class="section-title">Home Ownership Guardrail</div>
+    <div class="form-group checkbox-group">
+      <input type="checkbox" id="ownsPaternalHouse" checked onchange="toggleHousingPanel()">
+      <label style="cursor:pointer;" for="ownsPaternalHouse">🏠 Already owns house (no purchase needed)</label>
+    </div>
+    <div id="housingConditionalPanel" class="conditional-housing-panel">
+      <div class="purchase-mode-row">
+        <div class="form-group"><label for="propertyCost">Property Purchase Cost (₹)</label><input type="number" id="propertyCost" value="6000000" oninput="updateEmiCalc()"></div>
+        <div class="form-group"><label for="propertyAge">Target Age to Purchase</label><input type="number" id="propertyAge" value="38" oninput="updateEmiCalc()"></div>
+      </div>
+      <div class="form-group">
+        <label for="purchaseMode">Purchase Mode</label>
+        <select id="purchaseMode" onchange="onPurchaseModeChange()">
+          <option value="lumpsum">💰 Full Lump-Sum Purchase</option>
+          <option value="emi">🏦 Down Payment + Home Loan EMI</option>
+        </select>
+      </div>
+      <div class="emi-fields" id="emiFieldsPanel">
+        <div class="form-group"><label for="downPaymentPct">Down Payment (%)</label><input type="number" id="downPaymentPct" value="20" min="5" max="80" oninput="updateEmiCalc()"></div>
+        <div class="form-group"><label for="homeLoanRate">Home Loan Interest Rate (%)</label><input type="number" id="homeLoanRate" value="8.5" step="0.1" oninput="updateEmiCalc()"></div>
+        <div class="form-group"><label for="loanTenureYears">Loan Tenure (Years)</label><input type="number" id="loanTenureYears" value="20" min="1" max="30" oninput="updateEmiCalc()"></div>
+        <div class="form-group"><label>Monthly EMI (₹) <span class="purchase-mode-badge">Auto</span></label><input type="number" id="computedEmi" readonly></div>
+        <div class="form-group"><label>Down Payment Amount (₹) <span class="purchase-mode-badge">Auto</span></label><input type="number" id="computedDownPayment" readonly></div>
+        <div class="form-group"><label>EMI End Age <span class="purchase-mode-badge">Auto</span></label><input type="number" id="emiEndAge" readonly></div>
+      </div>
+      <div class="info-badge" id="housingInfoBadge">🏠 Full purchase cost debited from portfolio at target age (inflation-adjusted).</div>
+    </div>
+  </div>
+
+  <!-- Milestones -->
+  <div class="section-card">
+    <div class="section-title">Ad-Hoc Capital Milestones (One-Time Outflows)</div>
+    <div class="table-header">
+      <span>Milestone Goal</span><span>Cost (Today's ₹)</span><span>Target Age</span><span></span>
+    </div>
+    <div id="milestoneContainer"></div>
+    <button class="add-btn" onclick="addMilestoneRow('','','')">➕ Add One-Time Capital Outflow Goal</button>
+  </div>
+</section>
+
+<!-- ═══ OUTPUT PANEL ══════════════════════════════════════════════════ -->
+<section class="output-panel">
+  <div class="kpi-block">
+    <div class="kpi-split">
+      <div><div class="kpi-label">Earliest FIRE Age</div><div class="kpi-value highlight" id="outFireAge">--</div></div>
+      <div><div class="kpi-label">FIRE Corpus Required</div><div class="kpi-value" id="outFireCorpus">₹0</div></div>
+    </div>
+    <div class="kpi-status error" id="fireStatusMessage">Analyzing trajectory cash models...</div>
+  </div>
+
+  <div class="metrics-subgrid">
+    <div class="sub-metric"><div class="sub-metric-label">Monthly Savings Invested (Today)</div><div class="sub-metric-val" id="outRealInvestment">₹0</div></div>
+    <div class="sub-metric"><div class="sub-metric-label">Income Surplus (Buffer Margin)</div><div class="sub-metric-val" id="outBufferMargin">₹0</div></div>
+  </div>
+
+  <!-- Projection Table (collapsible) -->
+  <div class="proj-frame">
+    <div class="section-title" style="margin-bottom:4px;">💹 Year-by-Year Money Projection</div>
+    <div class="sub-metric-label" style="margin-bottom:14px;">Summary of savings growth; expand for full inflation-adjusted table to age <span id="projLifeAge">85</span>.</div>
+
+    <!-- Summary always-visible cards -->
+    <div class="proj-summary" id="projSummaryCards">
+      <div class="proj-summary-card">
+        <div class="proj-summary-label">Monthly Investment Today</div>
+        <div class="proj-summary-val" id="ps1Val">—</div>
+        <div class="proj-summary-sub" id="ps1Sub">At current income &amp; buffer</div>
+      </div>
+      <div class="proj-summary-card">
+        <div class="proj-summary-label">Monthly Investment at FIRE Age</div>
+        <div class="proj-summary-val" id="ps2Val">—</div>
+        <div class="proj-summary-sub" id="ps2Sub">After salary hike compounding</div>
+      </div>
+      <div class="proj-summary-card">
+        <div class="proj-summary-label">Total Portfolio at FIRE Age</div>
+        <div class="proj-summary-val" id="ps3Val">—</div>
+        <div class="proj-summary-sub" id="ps3Sub">Existing assets + fresh investments</div>
+      </div>
+      <div class="proj-summary-card">
+        <div class="proj-summary-label">Inflation-Adjusted Expense (FIRE Year)</div>
+        <div class="proj-summary-val" id="ps4Val">—</div>
+        <div class="proj-summary-sub" id="ps4Sub">Monthly expense at retirement</div>
+      </div>
+    </div>
+
+    <button class="proj-expand-btn" id="projExpandBtn" onclick="toggleProjectionTable()">
+      <span id="projExpandIcon">▼</span> Show Year-by-Year Breakdown
+    </button>
+
+    <div class="proj-table-wrap" id="projTableWrap">
+      <table class="proj-table" id="projTable">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Age</th>
+            <th>Monthly Income</th>
+            <th>Monthly Investment</th>
+            <th>Fresh Pool</th>
+            <th>Existing Portfolio</th>
+            <th>Total Wealth</th>
+            <th>Infl. Adj. Expense/mo</th>
+            <th>Phase</th>
+          </tr>
+        </thead>
+        <tbody id="projTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Wealth Chart -->
+  <div class="chart-frame">
+    <div class="section-title" style="margin-bottom:4px;">Wealth Compound Vector</div>
+    <div class="sub-metric-label" style="margin-bottom:12px;">Net worth through accumulation and withdrawal phases.</div>
+    <div class="chart-bars" id="chartBars"></div>
+  </div>
+
+  <!-- Cash-flow Chart -->
+  <div class="chart-frame">
+    <div class="section-title" style="margin-bottom:4px;">Annual Cash Inflows vs Outflows</div>
+    <div class="sub-metric-label" style="margin-bottom:12px;">Income <span style="color:#6366f1;font-weight:600">■</span> stops at FIRE vs inflated expenses <span style="color:#f43f5e;font-weight:600">■</span>.</div>
+    <div class="chart-bars" id="chartFlowBars"></div>
+  </div>
+</section>
+</main>
+
+<script>
+// ────────────────────────────────────────────────────────────────────
+// UTILITY
+// ────────────────────────────────────────────────────────────────────
+const fmt  = v => '₹' + Math.round(v).toLocaleString('en-IN');
+const fmtC = v => '₹' + (v / 1e7).toFixed(2) + ' Cr';
+
+function toggleSection(id){ document.getElementById(id).classList.toggle('active'); }
+
+function toggleHousingPanel(){
+  const owns  = document.getElementById('ownsPaternalHouse').checked;
+  const panel = document.getElementById('housingConditionalPanel');
+  panel.className = owns ? 'conditional-housing-panel' : 'conditional-housing-panel active';
+  calculateFire();
+}
+
+function onPurchaseModeChange(){
+  const mode  = document.getElementById('purchaseMode').value;
+  const panel = document.getElementById('emiFieldsPanel');
+  const badge = document.getElementById('housingInfoBadge');
+  if(mode==='emi'){
+    panel.classList.add('active');
+    badge.textContent='🏦 Down payment debited at purchase age; monthly EMI reduces investable surplus until loan closes.';
+  } else {
+    panel.classList.remove('active');
+    badge.textContent='🏠 Full purchase cost debited from portfolio at target age (inflation-adjusted).';
+  }
+  updateEmiCalc();
+}
+
+function calcEmiFormula(loanAmt, annualRate, tenureYears){
+  const r = annualRate / 12;
+  const n = tenureYears * 12;
+  if(n===0) return 0;
+  if(r===0) return loanAmt / n;
+  return (loanAmt * r * Math.pow(1+r,n)) / (Math.pow(1+r,n) - 1);
+}
+
+function updateEmiCalc(){
+  const propCost   = parseFloat(document.getElementById('propertyCost').value)   || 0;
+  const propAge    = parseInt(document.getElementById('propertyAge').value)       || 0;
+  const curAge     = parseInt(document.getElementById('currentAge').value)        || 30;
+  const infl       = (parseFloat(document.getElementById('inflation').value)      || 6)/100;
+  const downPct    = (parseFloat(document.getElementById('downPaymentPct').value) || 20)/100;
+  const rate       = (parseFloat(document.getElementById('homeLoanRate').value)   || 8.5)/100;
+  const tenure     = parseInt(document.getElementById('loanTenureYears').value)   || 20;
+
+  const yrs        = Math.max(0, propAge - curAge);
+  const inflated   = propCost * Math.pow(1+infl, yrs);
+  const down       = inflated * downPct;
+  const loan       = inflated - down;
+  const emi        = calcEmiFormula(loan, rate, tenure);
+
+  document.getElementById('computedEmi').value         = Math.round(emi);
+  document.getElementById('computedDownPayment').value  = Math.round(down);
+  document.getElementById('emiEndAge').value            = propAge + tenure;
+  calculateFire();
+}
+
+function addMilestoneRow(name='',cost='',age=''){
+  const container = document.getElementById('milestoneContainer');
+  const id        = 'ms_'+Math.random().toString(36).substr(2,5);
+  const div       = document.createElement('div');
+  div.className   = 'dynamic-row'; div.id = id;
+  div.innerHTML   = `
+    <input type="text"   placeholder="e.g. Marriage / Education" value="${name}" class="ms-name">
+    <input type="number" placeholder="Cost (₹)"                  value="${cost}" class="ms-cost">
+    <input type="number" placeholder="Age"                        value="${age}"  class="ms-age">
+    <button class="delete-btn" onclick="document.getElementById('${id}').remove();calculateFire();">🗑️</button>`;
+  container.appendChild(div);
+  div.querySelectorAll('input').forEach(i=>i.addEventListener('input',calculateFire));
+  calculateFire();
+}
+
+function toggleProjectionTable(){
+  const wrap = document.getElementById('projTableWrap');
+  const icon = document.getElementById('projExpandIcon');
+  const btn  = document.getElementById('projExpandBtn');
+  const open = wrap.classList.toggle('active');
+  icon.textContent = open ? '▲' : '▼';
+  btn.childNodes[1].textContent = open ? ' Hide Year-by-Year Breakdown' : ' Show Year-by-Year Breakdown';
+}
+
+// ────────────────────────────────────────────────────────────────────
+// CORE SIMULATION  — single pass returning full lifecycle log
+// ────────────────────────────────────────────────────────────────────
+function runSimulation(params, testRetireAge){
+  const {
+    currentAge, lifeExpectancy, inflation, taxDrag, salaryHikeRate,
+    monthlyIncome, totalMonthlyExpenses, currentMonthlyRent,
+    actualInvestedMonthly, freshInvestmentRoi, postFireRoiNet,
+    totalExistingNW, assetDetails,          // NEW: per-asset data
+    ownsHouse, propertyCost, propertyAge, purchaseMode,
+    downPaymentPct, homeLoanRate, loanTenureYrs,
+    milestones, cashBufferPct
+  } = params;
+
+  const totalSimYears = lifeExpectancy - currentAge;
+  const emiEndAge     = propertyAge + loanTenureYrs;
+
+  // Inflate property to purchase year for EMI computation
+  const yrsToProperty            = Math.max(0, propertyAge - currentAge);
+  const inflatedPropAtPurchase   = propertyCost * Math.pow(1+inflation, yrsToProperty);
+  const downAmt                  = inflatedPropAtPurchase * downPaymentPct;
+  const loanAmt                  = inflatedPropAtPurchase - downAmt;
+  const emiMonthly               = (purchaseMode==='emi') ? calcEmiFormula(loanAmt, homeLoanRate, loanTenureYrs) : 0;
+
+  // ── Per-asset tracking (each asset grows at its own ROI independently)
+  // We track individual asset values; existing NW = sum of all asset values
+  let assetValues = assetDetails.map(a => a.balance);   // array of current balances
+
+  let simFreshPool    = 0;
+  let lifecycleLog    = [];
+  let portfolioSurvived = true;
+  let retired         = false;   // flips once, permanently
+
+  for(let year=1; year<=totalSimYears; year++){
+    const simAge      = currentAge + year;
+    const yrsElapsed  = year - 1;   // full years elapsed before this year starts
+
+    let milestoneDip  = false;
+    let milestoneCost = 0;
+    let annualInflow  = 0;
+    let annualOutflow = 0;
+
+    // ── Existing assets: each grows at its own blended ROI annually ──
+    // They always grow (pre & post FIRE) until merged into retirement draw-down.
+    // At retirement we merge into a single pool and stop tracking separately.
+    if(!retired){
+      assetValues = assetValues.map((v,i) => v * (1 + assetDetails[i].roi));
+    }
+
+    const existingPoolNow = retired ? 0 : assetValues.reduce((s,v)=>s+v,0);
+
+    if(simAge <= testRetireAge){
+      // ══ PRE-FIRE: Working Phase ══════════════════════════════════
+
+      // Annual income at START of this year (year 1 = base * hike^0 = base)
+      const yearIncome   = (monthlyIncome * 12) * Math.pow(1+salaryHikeRate, yrsElapsed);
+      // Annual expenses inflated
+      const yearExpense  = (totalMonthlyExpenses * 12) * Math.pow(1+inflation, yrsElapsed);
+      annualInflow  = yearIncome;
+      annualOutflow = yearExpense;
+
+      // Investable surplus this year (income grows with salary, expenses with inflation)
+      const yearMonthlySurplus  = Math.max(0, (yearIncome/12) - (yearExpense/12));
+
+      // EMI deduction during loan period
+      let emiDeduction = 0;
+      if(!ownsHouse && purchaseMode==='emi' && simAge > propertyAge && simAge <= emiEndAge){
+        emiDeduction = emiMonthly;
+      }
+
+      const yearMonthlyInvested = Math.max(0, yearMonthlySurplus - emiDeduction) * (1 - cashBufferPct);
+      const annualContrib       = yearMonthlyInvested * 12;
+
+      // Fresh pool grows + mid-year contribution approximation
+      simFreshPool = (simFreshPool * (1+freshInvestmentRoi)) + (annualContrib * (1+freshInvestmentRoi/2));
+
+    } else {
+      // ══ POST-FIRE: Retirement Phase ══════════════════════════════
+
+      if(!retired){
+        // First year of retirement: merge all pools
+        retired = true;
+        // existingPoolNow already computed after growth above
+        simFreshPool = simFreshPool + existingPoolNow;
+        assetValues  = assetValues.map(()=>0);   // zeroed — all in simFreshPool now
+      }
+
+      annualInflow = 0;
+
+      // Expenses; remove rent if house acquired
+      let baseMonthlyExp = totalMonthlyExpenses;
+      if(ownsHouse || (!ownsHouse && simAge > propertyAge)){
+        baseMonthlyExp = Math.max(0, baseMonthlyExp - currentMonthlyRent);
+      }
+      // Inflation-adjusted expense for this year (year = full years from currentAge)
+      annualOutflow = (baseMonthlyExp * 12) * Math.pow(1+inflation, year);
+
+      // Withdrawal then growth: NW_end = (NW_start - withdrawal) * (1 + postFireRoiNet)
+      const afterWithdrawal = simFreshPool - annualOutflow;
+      simFreshPool          = afterWithdrawal * (1 + postFireRoiNet);
+    }
+
+    // ── Housing purchase deduction ──────────────────────────────────────
+    if(!ownsHouse && simAge === propertyAge){
+      // Inflate to the same yearsElapsed basis (start of purchase year)
+      const inflatedCost = propertyCost * Math.pow(1+inflation, yrsElapsed);
+
+      if(purchaseMode==='lumpsum'){
+        // Deduct from fresh pool first, then asset pools
+        if(simFreshPool >= inflatedCost){
+          simFreshPool -= inflatedCost;
+        } else {
+          let rem = inflatedCost - simFreshPool;
+          simFreshPool = 0;
+          // Draw from each asset proportionally
+          const totalAsset = assetValues.reduce((s,v)=>s+v,0);
+          if(totalAsset >= rem){
+            assetValues = assetValues.map(v => v - (totalAsset>0 ? v/totalAsset*rem : 0));
+          } else {
+            assetValues = assetValues.map(()=>0);
+          }
+        }
+        milestoneDip  = true;
+        milestoneCost += inflatedCost;
+
+      } else {
+        // EMI: only down payment at purchase age
+        const inflDown = inflatedPropAtPurchase * downPaymentPct;
+        if(simFreshPool >= inflDown){
+          simFreshPool -= inflDown;
+        } else {
+          let rem = inflDown - simFreshPool;
+          simFreshPool = 0;
+          const totalAsset = assetValues.reduce((s,v)=>s+v,0);
+          if(totalAsset >= rem){
+            assetValues = assetValues.map(v => v - (totalAsset>0 ? v/totalAsset*rem : 0));
+          } else {
+            assetValues = assetValues.map(()=>0);
+          }
+        }
+        milestoneDip  = true;
+        milestoneCost += inflDown;
+      }
+    }
+
+    // ── Ad-hoc milestones ──────────────────────────────────────────────
+    milestones.forEach(ms => {
+      if(ms.age === simAge){
+        const inflated = ms.cost * Math.pow(1+inflation, yrsElapsed);
+        if(simFreshPool >= inflated){
+          simFreshPool -= inflated;
+        } else {
+          let rem = inflated - simFreshPool;
+          simFreshPool = 0;
+          if(!retired){
+            const totalAsset = assetValues.reduce((s,v)=>s+v,0);
+            if(totalAsset >= rem){
+              assetValues = assetValues.map(v => v - (totalAsset>0 ? v/totalAsset*rem : 0));
+            } else {
+              assetValues = assetValues.map(()=>0);
+            }
+          }
+        }
+        milestoneDip  = true;
+        milestoneCost += inflated;
+      }
+    });
+
+    if(milestoneDip) annualOutflow += milestoneCost;
+
+    const existingNow    = retired ? 0 : assetValues.reduce((s,v)=>s+v,0);
+    const combinedNW     = retired ? simFreshPool : existingNow + simFreshPool;
+
+    if(combinedNW < 0){
+      simFreshPool = 0;
+      assetValues  = assetValues.map(()=>0);
+      if(simAge > testRetireAge) portfolioSurvived = false;
+    }
+
+    // Monthly investment this year for the table
+    const yrsEl2         = yrsElapsed;
+    const yearIncomeNow  = (monthlyIncome * 12) * Math.pow(1+salaryHikeRate, yrsEl2);
+    const yearExpNow     = (totalMonthlyExpenses * 12) * Math.pow(1+inflation, yrsEl2);
+    const surplusMonthly = Math.max(0, (yearIncomeNow/12) - (yearExpNow/12));
+    let emiDed           = 0;
+    if(!ownsHouse && purchaseMode==='emi' && simAge > propertyAge && simAge <= emiEndAge) emiDed = emiMonthly;
+    const monthlyInvested = simAge <= testRetireAge
+      ? Math.max(0, surplusMonthly - emiDed) * (1 - cashBufferPct)
+      : 0;
+
+    const inflExpMonthly = ((totalMonthlyExpenses) * Math.pow(1+inflation, yrsEl2+1));
+
+    lifecycleLog.push({
+      age:          simAge,
+      value:        Math.max(0, combinedNW),
+      existingNW:   existingNow,
+      freshPool:    Math.max(0, simFreshPool),
+      isRetired:    simAge > testRetireAge,
+      dip:          milestoneDip,
+      dipVal:       milestoneCost,
+      inflow:       annualInflow,
+      outflow:      annualOutflow,
+      monthlyIncome:       yearIncomeNow/12,
+      monthlyInvested:     monthlyInvested,
+      inflExpMonthly:      inflExpMonthly
+    });
+  }
+
+  return { portfolioSurvived, lifecycleLog };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// MAIN CALCULATOR
+// ────────────────────────────────────────────────────────────────────
+function calculateFire(){
+  // ── Parse inputs ───────────────────────────────────────────────
+  const currentAge      = parseInt(document.getElementById('currentAge').value)        || 30;
+  const lifeExpectancy  = parseInt(document.getElementById('lifeExpectancy').value)    || 85;
+  const inflation       = (parseFloat(document.getElementById('inflation').value)      || 6)/100;
+  const taxDrag         = (parseFloat(document.getElementById('taxRate').value)        || 15)/100;
+  const salaryHikeRate  = (parseFloat(document.getElementById('incomeIncrement').value)||8)/100;
+  const monthlyIncome   = parseFloat(document.getElementById('monthlyIncome').value)   || 0;
+  const cashBufferPct   = (parseFloat(document.getElementById('cashBufferPct').value)  || 0)/100;
+
+  // Expenses
+  let totalMonthlyExpenses = 0;
+  document.querySelectorAll('.itemized-exp').forEach(i=>totalMonthlyExpenses+=(parseFloat(i.value)||0));
+  const currentMonthlyRent = parseFloat(document.getElementById('rentInput').value) || 0;
+  const masterEl           = document.getElementById('masterExpense');
+  if(totalMonthlyExpenses > 0){ masterEl.value = totalMonthlyExpenses; masterEl.readOnly = true; }
+  else { totalMonthlyExpenses = parseFloat(masterEl.value)||0; masterEl.readOnly = false; }
+
+  // Surplus (today's figure — displayed; simulation uses growing surplus)
+  const computedSurplus       = Math.max(0, monthlyIncome - totalMonthlyExpenses);
+  const actualInvestedMonthly = computedSurplus * (1 - cashBufferPct);
+  document.getElementById('investmentOverride').innerText = Math.round(computedSurplus);
+  document.getElementById('investmentOverride').value     = Math.round(computedSurplus);
+  document.getElementById('outBufferMargin').innerText    = fmt(computedSurplus)+'/mo';
+  document.getElementById('outRealInvestment').innerText  = fmt(actualInvestedMonthly)+'/mo';
+
+  const freshInvestmentRoi = (parseFloat(document.getElementById('workingRoi').value) || 12)/100;
+  const postFireRoiRaw     = (parseFloat(document.getElementById('postFireRoi').value)|| 8)/100;
+  const postFireRoiNet     = postFireRoiRaw * (1 - taxDrag);
+
+  // ── Existing assets: collect PER-ASSET details ─────────────────
+  const assetInputs = document.querySelectorAll('.itemized-asset');
+  const assetRois   = document.querySelectorAll('.itemized-asset-roi');
+  let totalExistingNW = 0, totalReturnProd = 0;
+  const assetDetails = [];
+  assetInputs.forEach((inp,idx)=>{
+    const bal = parseFloat(inp.value) || 0;
+    const roi = (parseFloat(assetRois[idx].value) || 0)/100;
+    assetDetails.push({ balance:bal, roi });
+    totalExistingNW  += bal;
+    totalReturnProd  += bal * roi;
+  });
+  document.getElementById('masterAssets').value    = totalExistingNW;
+  const blendedRoi = totalExistingNW > 0 ? totalReturnProd/totalExistingNW : 0;
+  document.getElementById('blendedAssetRoi').value = (blendedRoi*100).toFixed(1)+'%';
+
+  // ── Milestones ─────────────────────────────────────────────────
+  const milestones = [];
+  document.querySelectorAll('#milestoneContainer .dynamic-row').forEach(row=>{
+    const cost = parseFloat(row.querySelector('.ms-cost').value)||0;
+    const age  = parseInt(row.querySelector('.ms-age').value)   ||0;
+    if(cost>0 && age>currentAge) milestones.push({cost,age});
+  });
+
+  // ── Housing ────────────────────────────────────────────────────
+  const ownsHouse      = document.getElementById('ownsPaternalHouse').checked;
+  const propertyCost   = parseFloat(document.getElementById('propertyCost').value) ||0;
+  const propertyAge    = parseInt(document.getElementById('propertyAge').value)    ||0;
+  const purchaseMode   = document.getElementById('purchaseMode').value;
+  const downPaymentPct = (parseFloat(document.getElementById('downPaymentPct').value)||20)/100;
+  const homeLoanRate   = (parseFloat(document.getElementById('homeLoanRate').value) ||8.5)/100;
+  const loanTenureYrs  = parseInt(document.getElementById('loanTenureYears').value) ||20;
+
+  const simParams = {
+    currentAge, lifeExpectancy, inflation, taxDrag, salaryHikeRate,
+    monthlyIncome, totalMonthlyExpenses, currentMonthlyRent,
+    actualInvestedMonthly, freshInvestmentRoi, postFireRoiNet,
+    totalExistingNW, assetDetails,
+    ownsHouse, propertyCost, propertyAge, purchaseMode,
+    downPaymentPct, homeLoanRate, loanTenureYrs,
+    milestones, cashBufferPct
+  };
+
+  // ── Solver: find earliest FIRE age ────────────────────────────
+  let earliestFireAge = null, fireCorpus = 0, winLog = [];
+
+  for(let tryAge = currentAge+1; tryAge <= lifeExpectancy; tryAge++){
+    const { portfolioSurvived, lifecycleLog } = runSimulation(simParams, tryAge);
+    if(portfolioSurvived){
+      earliestFireAge = tryAge;
+      winLog          = lifecycleLog;
+      const node      = lifecycleLog.find(l=>l.age===tryAge);
+      fireCorpus      = node ? node.value : 0;
+      break;
+    }
+  }
+
+  // ── Output ─────────────────────────────────────────────────────
+  document.getElementById('projLifeAge').textContent = lifeExpectancy;
+  const outAge    = document.getElementById('outFireAge');
+  const outCorpus = document.getElementById('outFireCorpus');
+  const statusBox = document.getElementById('fireStatusMessage');
+
+  if(earliestFireAge !== null){
+    outAge.innerText    = earliestFireAge;
+    outCorpus.innerText = fmtC(fireCorpus);
+    statusBox.className = 'kpi-status success';
+    statusBox.innerText = `🎉 Safe Autonomy Solved! Earning stops securely by age ${earliestFireAge} with corpus ${fmt(fireCorpus)}.`;
+    paintCharts(winLog, fireCorpus);
+    paintProjectionTable(winLog, earliestFireAge, currentAge, actualInvestedMonthly, salaryHikeRate, inflation, cashBufferPct, totalMonthlyExpenses, lifeExpectancy);
+    paintProjectionSummary(winLog, earliestFireAge, currentAge, actualInvestedMonthly);
+  } else {
+    outAge.innerText    = 'N/A'; outCorpus.innerText = '₹0';
+    statusBox.className = 'kpi-status error';
+    statusBox.innerText = `⚠️ Outflow Runway Ruin! Core assets break down inside lifetime horizons. Adjust savings or extend income duration.`;
+    document.getElementById('chartBars').innerHTML     = '<div style="color:var(--text-muted);font-size:.85rem;text-align:center;width:100%;margin-bottom:40px;">Trajectory broken.</div>';
+    document.getElementById('chartFlowBars').innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;text-align:center;width:100%;margin-bottom:40px;">Trajectory broken.</div>';
+    clearProjectionSummary();
+  }
+  saveState();
+}
+
+// ────────────────────────────────────────────────────────────────────
+// PROJECTION SUMMARY CARDS (always-visible 4-tile section)
+// ────────────────────────────────────────────────────────────────────
+function paintProjectionSummary(log, fireAge, currentAge, todayInvested){
+  const node = log.find(l=>l.age===fireAge);
+  document.getElementById('ps1Val').textContent = fmt(todayInvested)+'/mo';
+  document.getElementById('ps1Sub').textContent = 'Current monthly investment';
+  document.getElementById('ps2Val').textContent = node ? fmt(node.monthlyInvested)+'/mo' : '—';
+  document.getElementById('ps2Sub').textContent = node ? `At age ${fireAge} (salary-adjusted)` : '';
+  document.getElementById('ps3Val').textContent = node ? fmtC(node.value) : '—';
+  document.getElementById('ps3Sub').textContent = node ? `Total corpus at FIRE (age ${fireAge})` : '';
+  document.getElementById('ps4Val').textContent = node ? fmt(node.inflExpMonthly)+'/mo' : '—';
+  document.getElementById('ps4Sub').textContent = node ? `Inflation-adjusted monthly expense` : '';
+}
+
+function clearProjectionSummary(){
+  ['ps1Val','ps2Val','ps3Val','ps4Val'].forEach(id=>document.getElementById(id).textContent='—');
+}
+
+// ────────────────────────────────────────────────────────────────────
+// PROJECTION TABLE (year-by-year)
+// ────────────────────────────────────────────────────────────────────
+function paintProjectionTable(log, fireAge, currentAge, todayInvested, hikeRate, infl, bufferPct, baseMonthlyExp, lifeExp){
+  const tbody = document.getElementById('projTableBody');
+  tbody.innerHTML = '';
+
+  log.forEach(row => {
+    const tr = document.createElement('tr');
+    const isFireYear  = row.age === fireAge;
+    const isRetired   = row.isRetired;
+    const isDanger    = row.value <= 0;
+    if(isDanger)       tr.className = 'danger-row';
+    else if(isFireYear) tr.className = 'fire-row';
+    else if(isRetired)  tr.className = 'retired-row';
+
+    const phase = isFireYear ? '🔥 FIRE!' : (isRetired ? '🌴 Retired' : '💼 Working');
+
+    tr.innerHTML = `
+      <td>${row.age}</td>
+      <td>${row.age <= fireAge ? fmt(row.monthlyIncome)+'/mo' : '—'}</td>
+      <td>${row.age <= fireAge ? fmt(row.monthlyInvested)+'/mo' : '—'}</td>
+      <td>${fmtC(row.freshPool)}</td>
+      <td>${row.existingNW > 0 ? fmtC(row.existingNW) : '—'}</td>
+      <td>${fmtC(row.value)}</td>
+      <td>${fmt(row.inflExpMonthly)}/mo</td>
+      <td>${phase}${row.dip ? ' ⚡' : ''}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────
+// CHARTS
+// ────────────────────────────────────────────────────────────────────
+function paintCharts(trajectory, maxGoal){
+  const c1 = document.getElementById('chartBars');
+  const c2 = document.getElementById('chartFlowBars');
+  c1.innerHTML = ''; c2.innerHTML = '';
+
+  const peakW = Math.max(...trajectory.map(t=>t.value), maxGoal, 1);
+  const peakF = Math.max(...trajectory.map(t=>Math.max(t.inflow, t.outflow)), 1);
+
+  trajectory.forEach(d=>{
+    const w1 = document.createElement('div'); w1.className='chart-bar-wrapper';
+    const p1 = (d.value/peakW)*100;
+    let bc = 'bar'+(d.isRetired?' retired':'')+(d.dip?' milestone-dip':'');
+    w1.innerHTML=`<div class="tooltip">Age ${d.age}: ${fmt(d.value)}</div><div class="${bc}" style="height:${p1}%"></div><span class="chart-label-x">${d.age}</span>`;
+    c1.appendChild(w1);
+
+    const w2 = document.createElement('div'); w2.className='chart-bar-wrapper';
+    const ip = (d.inflow/peakF)*100;
+    const op = (d.outflow/peakF)*100;
+    w2.innerHTML=`<div class="tooltip">Age ${d.age}<br>🟢 ${fmt(d.inflow)}<br>🔴 ${fmt(d.outflow)}</div><div class="flow-bar-container"><div class="flow-sub-bar inflow" style="height:${ip}%"></div><div class="flow-sub-bar outflow" style="height:${op}%"></div></div><span class="chart-label-x">${d.age}</span>`;
+    c2.appendChild(w2);
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────
+// PERSISTENCE
+// ────────────────────────────────────────────────────────────────────
+function saveState(){
+  const s = {
+    monthlyIncome:document.getElementById('monthlyIncome').value,
+    incomeIncrement:document.getElementById('incomeIncrement').value,
+    inflation:document.getElementById('inflation').value,
+    taxRate:document.getElementById('taxRate').value,
+    currentAge:document.getElementById('currentAge').value,
+    lifeExpectancy:document.getElementById('lifeExpectancy').value,
+    masterExpense:document.getElementById('masterExpense').value,
+    cashBufferPct:document.getElementById('cashBufferPct').value,
+    workingRoi:document.getElementById('workingRoi').value,
+    postFireRoi:document.getElementById('postFireRoi').value,
+    ownsPaternalHouse:document.getElementById('ownsPaternalHouse').checked,
+    propertyCost:document.getElementById('propertyCost').value,
+    propertyAge:document.getElementById('propertyAge').value,
+    purchaseMode:document.getElementById('purchaseMode').value,
+    downPaymentPct:document.getElementById('downPaymentPct').value,
+    homeLoanRate:document.getElementById('homeLoanRate').value,
+    loanTenureYears:document.getElementById('loanTenureYears').value,
+    itemizedAssets:   Array.from(document.querySelectorAll('.itemized-asset')).map(i=>i.value),
+    itemizedAssetRois:Array.from(document.querySelectorAll('.itemized-asset-roi')).map(i=>i.value),
+    expenses:         Array.from(document.querySelectorAll('.itemized-exp')).map(i=>i.value),
+    milestones:[]
+  };
+  document.querySelectorAll('#milestoneContainer .dynamic-row').forEach(row=>{
+    s.milestones.push({name:row.querySelector('.ms-name').value,cost:row.querySelector('.ms-cost').value,age:row.querySelector('.ms-age').value});
+  });
+  try{ localStorage.setItem('fire_v7',JSON.stringify(s)); } catch(e){}
+}
+
+function loadState(){
+  let s = null;
+  try{ const raw=localStorage.getItem('fire_v7'); if(raw) s=JSON.parse(raw); } catch(e){}
+  if(!s){
+    addMilestoneRow('Buy Premium EV','1500000','35');
+    addMilestoneRow('Child Higher Education','3500000','48');
+    toggleHousingPanel(); return;
+  }
+  const skip=['expenses','itemizedAssets','itemizedAssetRois','milestones'];
+  Object.keys(s).forEach(k=>{
+    if(skip.includes(k)) return;
+    const el = document.getElementById(k);
+    if(!el) return;
+    if(typeof s[k]==='boolean') el.checked=s[k]; else el.value=s[k];
+  });
+  document.querySelectorAll('.itemized-asset').forEach((i,idx)=>{ if(s.itemizedAssets?.[idx]) i.value=s.itemizedAssets[idx]; });
+  document.querySelectorAll('.itemized-asset-roi').forEach((i,idx)=>{ if(s.itemizedAssetRois?.[idx]) i.value=s.itemizedAssetRois[idx]; });
+  document.querySelectorAll('.itemized-exp').forEach((i,idx)=>{ if(s.expenses?.[idx]) i.value=s.expenses[idx]; });
+  if(s.milestones?.length) s.milestones.forEach(m=>addMilestoneRow(m.name,m.cost,m.age));
+  toggleHousingPanel();
+  onPurchaseModeChange();
+}
+
+// ────────────────────────────────────────────────────────────────────
+// BOOT
+// ────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  loadState();
+  document.querySelectorAll(
+    '.input-panel input:not(.ms-name):not(.ms-cost):not(.ms-age):not(.itemized-asset):not(.itemized-asset-roi),.input-panel select'
+  ).forEach(el=>el.addEventListener('input',calculateFire));
+  updateEmiCalc();
+  calculateFire();
+});
+</script>
+</body>
+</html>

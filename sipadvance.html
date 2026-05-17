@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advance SIP Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-app: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569; /* Darkened for significantly better reading contrast */
+            --accent-color: #4f46e5;
+            --accent-hover: #4338ca;
+            --success-color: #16a34a; /* Slightly deeper green for enhanced legibility */
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            --transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-app: #0b0f19;
+            --bg-card: #151f32;
+            --border-color: #243249;
+            --text-primary: #f8fafc; /* Brighter white for dark mode clarity */
+            --text-secondary: #cbd5e1; /* Lighter slate for clear text contrast */
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --success-color: #4ade80;
+            --danger-color: #f87171;
+            --warning-color: #fbbf24;
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        body { background-color: var(--bg-app); color: var(--text-primary); padding: 2rem 1.5rem; transition: var(--transition); display: flex; justify-content: center; }
+        
+        .page-wrapper { width: 100%; max-width: 1400px; display: flex; flex-direction: column; gap: 2rem; }
+        .top-split { display: grid; grid-template-columns: 400px 1fr; gap: 2rem; align-items: start; }
+        
+        @media (max-width: 1150px) { .top-split { grid-template-columns: 1fr; } }
+
+        .card-panel { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); padding: 2rem; transition: var(--transition); height: fit-content; }
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); }
+
+        .theme-toggle { background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; border-radius: 10px; cursor: pointer; display: flex; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-secondary); letter-spacing: -0.01em; }
+        
+        .input-wrap { position: relative; display: flex; align-items: center; }
+        .input-prefix { position: absolute; left: 0.75rem; font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); }
+        .input-suffix { position: absolute; right: 0.75rem; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); }
+        
+        input, select { width: 100%; padding: 0.75rem 0.85rem; border-radius: 10px; border: 1px solid var(--border-color); background-color: var(--bg-card); color: var(--text-primary); font-size: 0.95rem; font-weight: 500; outline: none; transition: var(--transition); }
+        input.has-prefix { padding-left: 1.9rem; }
+        input.has-suffix { padding-right: 1.9rem; }
+        input:focus, select:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1); }
+
+        .btn-primary { background: var(--accent-color); color: white; border: none; padding: 0.75rem; width: 100%; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: var(--transition); }
+        .btn-primary:hover { background: var(--accent-hover); }
+
+        /* Right Analytics Container Display */
+        .analytics-panel { display: flex; flex-direction: column; gap: 1.5rem; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .metric-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow-lg); }
+        .metric-val { font-size: 1.4rem; font-weight: 800; margin-top: 0.4rem; letter-spacing: -0.02em; }
+
+        /* Balanced 320px Analytics Workspace */
+        .charts-workspace { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.5rem; height: 320px; width: 100%; }
+        
+        @media (max-width: 768px) {
+            .charts-workspace { grid-template-columns: 1fr; height: auto; }
+            .chart-panel-box { height: 260px !important; }
+        }
+
+        .chart-panel-box { background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow-lg); position: relative; height: 100%; display: flex; flex-direction: column; }
+        .chart-title { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+        .canvas-container { flex: 1; position: relative; min-height: 0; }
+
+        /* High Legibility Strategic Ledger */
+        .full-width-ledger-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; box-shadow: var(--shadow-lg); overflow: hidden; width: 100%; margin-top: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; letter-spacing: -0.01em; }
+        th { background: var(--bg-app); color: var(--text-secondary); font-weight: 700; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; }
+        td { padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--border-color); color: var(--text-primary); vertical-align: middle; line-height: 1.4; }
+        tr:last-child td { border-bottom: none; }
+        
+        /* Directives UI Stack elements */
+        .directives-cell-container { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; justify-content: space-between; min-height: 38px; }
+        .chips-stack { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+        
+        .badge { padding: 0.35rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: var(--shadow-sm); }
+        .badge-paused { background: rgba(220, 38, 38, 0.08); color: var(--danger-color); border: 1px solid rgba(220, 38, 38, 0.15); }
+        .badge-stepup-paused { background: rgba(245, 158, 11, 0.08); color: var(--warning-color); border: 1px solid rgba(245, 158, 11, 0.15); }
+        .badge-withdrew { background: rgba(217, 119, 6, 0.08); color: var(--warning-color); border: 1px solid rgba(217, 119, 6, 0.15); }
+        
+        .chip-delete-btn { background: transparent; border: none; color: inherit; cursor: pointer; display: flex; align-items: center; opacity: 0.7; font-size: 1rem; padding: 0 0.1rem; line-height: 1; }
+        .chip-delete-btn:hover { opacity: 1; }
+
+        .btn-inline-add { background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.75rem; font-weight: 700; padding: 0.4rem 0.75rem; border-radius: 6px; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; }
+        .btn-inline-add:hover { border-color: var(--accent-color); color: var(--accent-color); background: rgba(79, 70, 229, 0.04); }
+
+        /* Micro-Modal Overlay Architecture */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-overlay.is-active { opacity: 1; pointer-events: auto; }
+        
+        .modal-body { background: var(--bg-card); border: 1px solid var(--border-color); width: 100%; max-width: 360px; padding: 1.5rem; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); transform: scale(0.95); transition: transform 0.2s ease; }
+        .modal-overlay.is-active .modal-body { transform: scale(1); }
+        .modal-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+        .modal-actions-row { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem; }
+        
+        .btn-secondary { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+        .btn-secondary:hover { background: var(--bg-app); color: var(--text-primary); }
+        .modal-body .btn-primary { width: auto; padding: 0.6rem 1.2rem; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+    
+    <div class="top-split">
+        <!-- Rebranded Form Sidebar Configuration Panel -->
+        <div class="card-panel">
+            <div class="header-ui">
+                <h1>Advance SIP Calculator</h1>
+                <button class="theme-toggle" id="themeToggleBtn" type="button" aria-label="Toggle Interface Theme">
+                    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+            </div>
+
+            <form id="sipForm">
+                <div class="form-group">
+                    <label for="baseSip">Initial Monthly SIP Amount</label>
+                    <div class="input-wrap">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="baseSip" value="20000" min="100" class="has-prefix" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="returnRate">Expected Return (Yr)</label>
+                        <div class="input-wrap">
+                            <input type="number" id="returnRate" value="12" step="0.1" min="1" max="50" class="has-suffix" required>
+                            <span class="input-suffix">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="tenure">Horizon Length</label>
+                        <div class="input-wrap">
+                            <input type="number" id="tenure" value="10" min="1" max="40" class="has-suffix" required>
+                            <span class="input-suffix">Yrs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="stepUp">Annual Top-Up</label>
+                        <div class="input-wrap">
+                            <input type="number" id="stepUp" value="5" min="0" max="100" class="has-suffix" required>
+                            <span class="input-suffix">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inflation">Expected Inflation</label>
+                        <div class="input-wrap">
+                            <input type="number" id="inflation" value="6" min="0" max="20" class="has-suffix" required>
+                            <span class="input-suffix">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="taxRate">Estimated LTCG Tax Rate</label>
+                    <div class="input-wrap">
+                        <input type="number" id="taxRate" value="12.5" step="0.1" min="0" max="40" class="has-suffix" required>
+                        <span class="input-suffix">%</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Result Displays Metric Rows -->
+        <div class="analytics-panel">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <label>Total Invested Capital</label>
+                    <div class="metric-val" id="outPayTotal">₹0</div>
+                </div>
+                <div class="metric-card">
+                    <label>Estimated Net Wealth</label>
+                    <div class="metric-val" id="wealthTotal" style="color: var(--success-color);">₹0</div>
+                </div>
+                <div class="metric-card">
+                    <label>Real Purchasing Power</label>
+                    <div class="metric-val" id="inflationTotal" style="color: var(--accent-color);">₹0</div>
+                </div>
+                <div class="metric-card">
+                    <label>Post-Tax Valuation</label>
+                    <div class="metric-val" id="postTaxTotal" style="color: #818cf8;">₹0</div>
+                </div>
+            </div>
+
+            <!-- Symmetric 320px Horizon Workspace -->
+            <div class="charts-workspace">
+                <div class="chart-panel-box">
+                    <div class="chart-title">Compounding Growth Velocity Vector</div>
+                    <div class="canvas-container">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-panel-box">
+                    <div class="chart-title">Terminal Value Distribution Summary</div>
+                    <div class="canvas-container">
+                        <canvas id="breakdownChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Width Interventions Matrix Strategic Ledger Framework -->
+    <div class="full-width-ledger-container">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 1rem; letter-spacing: -0.01em;">
+            Comprehensive Financial Projections Ledger
+        </div>
+        <div style="width: 100%; overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Year Index</th>
+                        <th>Current Monthly SIP</th>
+                        <th>Yearly Inflow Outlay</th>
+                        <th>Yearly Cash Withdrawals</th>
+                        <th>Compounded Valuation (YE)</th>
+                        <th style="min-width: 320px;">Life-Event Adjustments</th>
+                    </tr>
+                </thead>
+                <tbody id="ledgerBody">
+                    <!-- Iterative pipeline maps rows dynamically here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modification Micro-Modal Overlay -->
+<div class="modal-overlay" id="eventModalOverlay">
+    <div class="modal-body">
+        <div class="modal-title" id="modalTargetYearTitle">Add Adjustment (Year X)</div>
+        
+        <div class="form-group">
+            <label for="modalAction">Action Target Type</label>
+            <select id="modalAction">
+                <option value="pause">Pause Contributions</option>
+                <option value="pauseStepUp">Pause Step-Up</option>
+                <option value="withdraw">Withdraw Capital Amount</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="modalAmountGroup" style="display: none;">
+            <label for="modalAmount">Amount to Cash Out</label>
+            <div class="input-wrap">
+                <span class="input-prefix">₹</span>
+                <input type="number" id="modalAmount" placeholder="e.g. 500000" min="1" class="has-prefix">
+            </div>
+        </div>
+
+        <div class="modal-actions-row">
+            <button type="button" class="btn-secondary" id="closeModalBtn">Cancel</button>
+            <button type="button" class="btn-primary" id="saveEventBtn">Inject Action</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const htmlEl = document.documentElement;
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const sipForm = document.getElementById('sipForm');
+    const ledgerBody = document.getElementById('ledgerBody');
+
+    // Modal DOM access paths
+    const eventModalOverlay = document.getElementById('eventModalOverlay');
+    const modalTargetYearTitle = document.getElementById('modalTargetYearTitle');
+    const modalAction = document.getElementById('modalAction');
+    const modalAmountGroup = document.getElementById('modalAmountGroup');
+    const modalAmount = document.getElementById('modalAmount');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const saveEventBtn = document.getElementById('saveEventBtn');
+
+    const sunSvg = `<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>`;
+    const moonSvg = `<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>`;
+    
+    let chartInstance = null;
+    let pieChartInstance = null;
+    
+    // Core Array-based storage configuration matrix map
+    let timelineEventsData = {}; 
+    let activeModalYearTarget = null;
+
+    // --- Core UI Custom Theme Router ---
+    function initTheme() {
+        const activeTheme = localStorage.getItem('sip-calc-theme') || 'light';
+        htmlEl.setAttribute('data-theme', activeTheme);
+        themeIcon.innerHTML = activeTheme === 'dark' ? sunSvg : moonSvg;
+        if(chartInstance || pieChartInstance) rebuildChartEngines();
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        const targetTheme = htmlEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        htmlEl.setAttribute('data-theme', targetTheme);
+        localStorage.setItem('sip-calc-theme', targetTheme);
+        themeIcon.innerHTML = targetTheme === 'dark' ? sunSvg : moonSvg;
+        rebuildChartEngines();
+    });
+
+    // --- Persistent Local Cache Handlers ---
+    function cacheStateData() {
+        const inputs = ['baseSip', 'returnRate', 'tenure', 'stepUp', 'inflation', 'taxRate'];
+        const packet = {};
+        inputs.forEach(id => packet[id] = document.getElementById(id).value);
+        packet['timelineEventsData'] = timelineEventsData;
+        localStorage.setItem('ledger-integrated-sip-cache', JSON.stringify(packet));
+    }
+
+    function rehydrateCachedState() {
+        const dataJson = localStorage.getItem('ledger-integrated-sip-cache');
+        if(!dataJson) return false;
+        try {
+            const parsed = JSON.parse(dataJson);
+            Object.keys(parsed).forEach(key => {
+                if(key !== 'timelineEventsData' && document.getElementById(key)) {
+                    document.getElementById(key).value = parsed[key];
+                }
+            });
+            timelineEventsData = parsed.timelineEventsData || {};
+            return true;
+        } catch(e) {
+            return false;
+        }
+    }
+
+    // --- Modal Configuration Interactions ---
+    function openModifierModal(yearNum) {
+        activeModalYearTarget = yearNum;
+        modalTargetYearTitle.innerText = `Add Life-Event Adjustment (Year ${yearNum})`;
+        modalAction.value = 'pause';
+        modalAmountGroup.style.display = 'none';
+        modalAmount.value = '';
+        eventModalOverlay.classList.add('is-active');
+    }
+
+    function closeModifierModal() {
+        eventModalOverlay.classList.remove('is-active');
+        activeModalYearTarget = null;
+    }
+
+    modalAction.addEventListener('change', () => {
+        modalAmountGroup.style.display = modalAction.value === 'withdraw' ? 'block' : 'none';
+    });
+
+    closeModalBtn.addEventListener('click', closeModifierModal);
+    
+    saveEventBtn.addEventListener('click', () => {
+        if (!activeModalYearTarget) return;
+        const type = modalAction.value;
+        let amount = 0;
+
+        if (type === 'withdraw') {
+            amount = parseFloat(modalAmount.value) || 0;
+            if (amount <= 0) return;
+        }
+
+        if (!timelineEventsData[activeModalYearTarget]) {
+            timelineEventsData[activeModalYearTarget] = [];
+        }
+
+        timelineEventsData[activeModalYearTarget].push({ type, amount });
+        
+        cacheStateData();
+        closeModifierModal();
+        executeCalculationPipeline();
+    });
+
+    window.deleteStackedEventNode = function(yearNum, index) {
+        if (timelineEventsData[yearNum]) {
+            timelineEventsData[yearNum].splice(index, 1);
+            if (timelineEventsData[yearNum].length === 0) {
+                delete timelineEventsData[yearNum];
+            }
+            cacheStateData();
+            executeCalculationPipeline();
+        }
+    };
+
+    // --- Mathematical Compounding Processing Pipeline Engine ---
+    function executeCalculationPipeline() {
+        const baseSip = parseFloat(document.getElementById('baseSip').value) || 0;
+        const annualReturnRate = parseFloat(document.getElementById('returnRate').value) || 0;
+        const totalHorizonYears = parseInt(document.getElementById('tenure').value) || 1;
+        const compoundingStepUp = parseFloat(document.getElementById('stepUp').value) || 0;
+        const targetedInflation = parseFloat(document.getElementById('inflation').value) || 0;
+        const standardLtcgTaxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+
+        const calculatedMonthlyRate = (annualReturnRate / 100) / 12;
+        
+        let runningCorpus = 0;
+        let cumulativeInvestedCapital = 0;
+        let structuralActiveSipValue = baseSip;
+
+        const timelineLabels = [];
+        const trackingInvestedVector = [];
+        const trackingWealthVector = [];
+        const trackingInflationAdjustedVector = [];
+        
+        let compiledLedgerHtml = '';
+
+        for (let year = 1; year <= totalHorizonYears; year++) {
+            const eventsForYear = timelineEventsData[year] || [];
+            const currentYearIsPaused = eventsForYear.some(e => e.type === 'pause');
+            const currentYearStepUpPaused = eventsForYear.some(e => e.type === 'pauseStepUp');
+            
+            // Apply annual compounding step-up from Year 2 onwards if not explicitly paused
+            if (year > 1) {
+                if (!currentYearStepUpPaused) {
+                    structuralActiveSipValue = structuralActiveSipValue * (1 + (compoundingStepUp / 100));
+                }
+            }
+
+            const totalYearlyWithdrawal = eventsForYear
+                .filter(e => e.type === 'withdraw')
+                .reduce((sum, e) => sum + e.amount, 0);
+            
+            let yearTotalInvestedAccumulator = 0;
+            const absoluteActiveMonthlySip = currentYearIsPaused ? 0 : structuralActiveSipValue;
+
+            for (let m = 1; m <= 12; m++) {
+                runningCorpus = (runningCorpus + absoluteActiveMonthlySip) * (1 + calculatedMonthlyRate);
+                yearTotalInvestedAccumulator += absoluteActiveMonthlySip;
+            }
+
+            cumulativeInvestedCapital += yearTotalInvestedAccumulator;
+
+            if (totalYearlyWithdrawal > 0) {
+                runningCorpus = Math.max(0, runningCorpus - totalYearlyWithdrawal);
+            }
+
+            const activeYearlyInflationFactor = Math.pow(1 + (targetedInflation / 100), year);
+            const verifiedPresentValuePurchasingPower = runningCorpus / activeYearlyInflationFactor;
+
+            timelineLabels.push(`Year ${year}`);
+            trackingInvestedVector.push(Math.round(cumulativeInvestedCapital));
+            trackingWealthVector.push(Math.round(runningCorpus));
+            trackingInflationAdjustedVector.push(Math.round(verifiedPresentValuePurchasingPower));
+
+            let chipsHtml = '';
+            eventsForYear.forEach((evt, idx) => {
+                if (evt.type === 'pause') {
+                    chipsHtml += `
+                        <span class="badge badge-paused">
+                            ⏸️ SIP Paused
+                            <button class="chip-delete-btn" onclick="deleteStackedEventNode(${year}, ${idx})" aria-label="Delete action">&times;</button>
+                        </span>`;
+                } else if (evt.type === 'pauseStepUp') {
+                    chipsHtml += `
+                        <span class="badge badge-stepup-paused">
+                            ⏭️ Step-Up Paused
+                            <button class="chip-delete-btn" onclick="deleteStackedEventNode(${year}, ${idx})" aria-label="Delete action">&times;</button>
+                        </span>`;
+                } else {
+                    chipsHtml += `
+                        <span class="badge badge-withdrew">
+                            💸 Outflow: ₹${new Intl.NumberFormat('en-IN').format(evt.amount)}
+                            <button class="chip-delete-btn" onclick="deleteStackedEventNode(${year}, ${idx})" aria-label="Delete withdrawal">&times;</button>
+                        </span>`;
+                }
+            });
+
+            compiledLedgerHtml += `
+                <tr>
+                    <td><strong>Year ${year}</strong></td>
+                    <td style="font-variant-numeric: tabular-nums; font-weight: 500;">₹${new Intl.NumberFormat('en-IN').format(Math.round(structuralActiveSipValue))}</td>
+                    <td style="font-variant-numeric: tabular-nums; font-weight: 500;">₹${new Intl.NumberFormat('en-IN').format(yearTotalInvestedAccumulator)}</td>
+                    <td style="color:var(--danger-color); font-variant-numeric: tabular-nums; font-weight: 600;">${totalYearlyWithdrawal > 0 ? '₹' + new Intl.NumberFormat('en-IN').format(totalYearlyWithdrawal) : '—'}</td>
+                    <td style="font-weight:700; color:var(--success-color); font-variant-numeric: tabular-nums;">₹${new Intl.NumberFormat('en-IN').format(Math.round(runningCorpus))}</td>
+                    <td>
+                        <div class="directives-cell-container">
+                            <div class="chips-stack">${chipsHtml}</div>
+                            <button type="button" class="btn-inline-add" onclick="openModifierModal(${year})">＋ Add Adjustment</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        const calculatedNetProfits = Math.max(0, runningCorpus - cumulativeInvestedCapital);
+        const dynamicTaxableBaseProfit = Math.max(0, calculatedNetProfits - 125000); 
+        const taxSiphonOutflow = dynamicTaxableBaseProfit * (standardLtcgTaxRate / 100);
+        const verifiedNetPostTaxCorpus = runningCorpus - taxSiphonOutflow;
+        const netCapitalGainsAdjusted = calculatedNetProfits - taxSiphonOutflow;
+
+        // Populate Metric Nodes
+        document.getElementById('outPayTotal').innerText = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(cumulativeInvestedCapital));
+        document.getElementById('wealthTotal').innerText = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(runningCorpus));
+        document.getElementById('inflationTotal').innerText = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(runningCorpus / Math.pow(1 + (targetedInflation / 100), totalHorizonYears)));
+        document.getElementById('postTaxTotal').innerText = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(verifiedNetPostTaxCorpus));
+        ledgerBody.innerHTML = compiledLedgerHtml;
+
+        renderGrowthChartEngine(timelineLabels, trackingInvestedVector, trackingWealthVector, trackingInflationAdjustedVector);
+        renderDistributionPieEngine(Math.round(cumulativeInvestedCapital), Math.round(netCapitalGainsAdjusted), Math.round(taxSiphonOutflow));
+    }
+
+    // --- Premium Line Graph Context Framework ---
+    function renderGrowthChartEngine(labels, invested, wealth, inflationValue) {
+        const isDark = htmlEl.getAttribute('data-theme') === 'dark';
+        const gridColor = isDark ? '#243249' : '#f1f5f9';
+        const textMuted = isDark ? '#cbd5e1' : '#475569';
+
+        if (chartInstance) {
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = invested;
+            chartInstance.data.datasets[1].data = wealth;
+            chartInstance.data.datasets[2].data = inflationValue;
+            chartInstance.options.scales.x.grid.color = gridColor;
+            chartInstance.options.scales.y.grid.color = gridColor;
+            chartInstance.options.scales.x.ticks.color = textMuted;
+            chartInstance.options.scales.y.ticks.color = textMuted;
+            
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            const g1 = ctx.createLinearGradient(0, 0, 0, 260);
+            g1.addColorStop(0, isDark ? 'rgba(99, 102, 241, 0.22)' : 'rgba(79, 70, 229, 0.12)');
+            g1.addColorStop(1, 'rgba(79, 70, 229, 0)');
+            chartInstance.data.datasets[1].backgroundColor = g1;
+
+            chartInstance.update();
+            return;
+        }
+
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        const gradientFillNode = ctx.createLinearGradient(0, 0, 0, 260);
+        gradientFillNode.addColorStop(0, isDark ? 'rgba(99, 102, 241, 0.22)' : 'rgba(79, 70, 229, 0.12)');
+        gradientFillNode.addColorStop(1, 'rgba(79, 70, 229, 0)');
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Principal',
+                        data: invested,
+                        borderColor: '#94a3b8',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [5, 4],
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        tension: 0.15
+                    },
+                    {
+                        label: 'Gross Wealth',
+                        data: wealth,
+                        borderColor: isDark ? '#6366f1' : '#4f46e5',
+                        backgroundColor: gradientFillNode,
+                        fill: true,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: isDark ? '#6366f1' : '#4f46e5',
+                        tension: 0.15
+                    },
+                    {
+                        label: 'Real Value (Inflation Adj.)',
+                        data: inflationValue,
+                        borderColor: '#16a34a',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        tension: 0.15
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 8, padding: 10, font: { size: 10, weight: 600 }, color: textMuted }
+                    },
+                    tooltip: {
+                        padding: 10,
+                        borderRadius: 8,
+                        backgroundColor: isDark ? '#1e293b' : '#0f172a',
+                        titleFont: { size: 11, weight: 700 },
+                        bodyFont: { size: 11 },
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.dataset.label + ': ₹' + new Intl.NumberFormat('en-IN').format(context.raw);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: textMuted, font: { size: 10 } } },
+                    y: { grid: { color: gridColor }, ticks: { color: textMuted, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    // --- Doughnut Distribution Matrix Mapping Engine ---
+    function renderDistributionPieEngine(invested, netGains, taxOutflow) {
+        const isDark = htmlEl.getAttribute('data-theme') === 'dark';
+        const textMuted = isDark ? '#cbd5e1' : '#475569';
+
+        // Updated palette to make the Principal segment warm amber/yellow
+        const dynamicColors = isDark 
+            ? ['#fbbf24', '#4ade80', '#f87171'] 
+            : ['#f59e0b', '#16a34a', '#dc2626'];
+
+        if (pieChartInstance) {
+            pieChartInstance.data.datasets[0].data = [invested, netGains, taxOutflow];
+            pieChartInstance.data.datasets[0].backgroundColor = dynamicColors;
+            pieChartInstance.options.plugins.legend.labels.color = textMuted;
+            pieChartInstance.update();
+            return;
+        }
+
+        const ctx = document.getElementById('breakdownChart').getContext('2d');
+        pieChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Principal', 'Net Profit', 'Est. Tax'],
+                datasets: [{
+                    data: [invested, netGains, taxOutflow],
+                    backgroundColor: dynamicColors,
+                    borderWidth: 0,
+                    hoverOffset: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 10, padding: 10, font: { size: 10, weight: 600 }, color: textMuted }
+                    },
+                    tooltip: {
+                        padding: 10,
+                        borderRadius: 8,
+                        backgroundColor: isDark ? '#1e293b' : '#0f172a',
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                return ' ' + context.label + ': ₹' + new Intl.NumberFormat('en-IN').format(val) + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function rebuildChartEngines() {
+        if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+        if (pieChartInstance) { pieChartInstance.destroy(); pieChartInstance = null; }
+        executeCalculationPipeline();
+    }
+
+    // --- Interactive Form Change Binding Routines ---
+    sipForm.addEventListener('input', () => {
+        cacheStateData();
+        executeCalculationPipeline();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        rehydrateCachedState();
+        initTheme();
+        executeCalculationPipeline();
+    });
+</script>
+</body>
+</html>

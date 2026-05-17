@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlTag" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Wealth Architecture Blueprint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#111827', 900: '#030712', 950: '#020617' },
+                        brand: { blue: '#2563eb', teal: '#0d9488', emerald: '#059669', rose: '#e11d48' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Dark Theme Styles */
+        .dark body { background-color: #020617; color: #f8fafc; }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .dark input, .dark select {
+            background-color: #090d16 !important;
+            border: 1px solid #1e293b !important;
+            color: #f8fafc !important;
+        }
+
+        /* Light Theme Styles */
+        .light body { background-color: #f8fafc; color: #0f172a; }
+        .light .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .light input, .light select {
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        .light input:focus, .light select:focus {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+        .light .text-white { color: #0f172a !important; }
+        .light .text-slate-300 { color: #334155 !important; }
+        .light .text-slate-400 { color: #475569 !important; }
+        .light .text-slate-500 { color: #64748b !important; }
+        .light .bg-slate-900\/50 { background-color: rgba(241, 245, 249, 0.9) !important; }
+        .light .bg-slate-950 { background-color: #ffffff !important; }
+        .light .bg-slate-800\/60 { background-color: #e2e8f0 !important; }
+        .light .bg-slate-800 { background-color: #e2e8f0 !important; }
+        .light .border-slate-800 { border-color: #e2e8f0 !important; }
+        .light .divide-slate-800\/50 > * + * { border-color: #e2e8f0 !important; }
+
+        .glass-panel { border-radius: 1rem; }
+        input, select {
+            border-radius: 0.375rem;
+            padding: 0.4rem 0.75rem;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .badge {
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        /* Master Engine Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 38px;
+            height: 22px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155;
+            transition: .3s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(16px); }
+        
+        /* Mini Switch for Sub-sections / Sleeves */
+        .mini-switch {
+            position: relative;
+            display: inline-block;
+            width: 30px;
+            height: 18px;
+        }
+        .mini-switch input { opacity: 0; width: 0; height: 0; }
+        .mini-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #475569;
+            transition: .2s;
+            border-radius: 18px;
+        }
+        .mini-slider:before {
+            position: absolute;
+            content: "";
+            height: 12px; width: 12px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+        }
+        input:checked + .mini-slider { background-color: #10b981; }
+        input:checked + .mini-slider:before { transform: translateX(12px); }
+        
+        .engine-disabled { opacity: 0.25; pointer-events: none; user-select: none; }
+        .sleeve-disabled { opacity: 0.35; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .dark ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        .light ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="p-3 md:p-6 min-h-screen">
+
+    <div class="max-w-[1750px] mx-auto space-y-6">
+        
+        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-slate-800 pb-5 gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-brand-teal via-brand-blue to-purple-500">
+                    Wealth Architecture Planner
+                </h1>
+                <p class="text-slate-400 text-sm mt-1">Multi-Sleeve Tactical Asset Allocation Matrix with Symmetric Ledgers</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button onclick="toggleTheme()" class="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-md transition flex items-center justify-center border border-slate-700/50">
+                    <svg id="themeIconSun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M12 5a7 7 0 100 14 7 7 0 000-14z"></path></svg>
+                    <svg id="themeIconMoon" class="w-4 h-4 block dark:hidden text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+                <button onclick="resetToDefaults()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md text-xs font-medium transition border border-slate-700/50">
+                    Reset Baseline
+                </button>
+                <span class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-brand-emerald/10 text-brand-emerald border border-brand-emerald/20">
+                    <span class="w-2 h-2 bg-brand-emerald rounded-full mr-2 animate-pulse"></span>
+                    Auto-Saving Sync
+                </span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-panel p-5">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Injected Capital</h3>
+                <p class="text-2xl font-bold text-white mt-1" id="statInvested">₹0</p>
+                <p class="text-xs text-slate-500 mt-1">Lumpsum + Inflow Accumulation</p>
+            </div>
+            <div class="glass-panel p-5 border-l-4 border-brand-teal">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-brand-teal">Nominal Final Valuation</h3>
+                    <span id="statCagr" class="text-xs font-bold text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded border border-brand-emerald/20">0.0% CAGR</span>
+                </div>
+                <p class="text-2xl font-bold text-white mt-1" id="statNominal">₹0</p>
+                <p class="text-xs text-slate-400 mt-1" id="statMultiplier">0x Capital Multiplier</p>
+            </div>
+            <div class="glass-panel p-5 border-l-4 border-brand-blue">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-brand-blue">Real Purchasing Power</h3>
+                <p class="text-2xl font-bold text-white mt-1" id="statReal">₹0</p>
+                <p class="text-xs text-slate-500 mt-1">Net Inflation Discounted</p>
+            </div>
+            <div class="glass-panel p-5">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-purple-400">Terminal Monthly Step-Up</h3>
+                <p class="text-2xl font-bold text-white mt-1" id="statTerminalSip">₹0</p>
+                <p class="text-xs text-slate-500 mt-1">Final year monthly savings target</p>
+            </div>
+        </div>
+
+        <div class="glass-panel p-5">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Global Macro Parameters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Time Horizon (Years)</label>
+                    <input type="number" id="macroHorizon" value="10" min="1" max="30" class="w-full text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Annual Inflation (%)</label>
+                    <input type="number" id="macroInflation" value="7" step="0.1" class="w-full text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Annual Inflow Step-Up (%)</label>
+                    <input type="number" id="macroStepUp" value="8" step="0.5" class="w-full text-sm font-semibold">
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-panel p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3 gap-2">
+                    <div class="flex items-center gap-3">
+                        <label class="switch shrink-0">
+                            <input type="checkbox" id="lumpsumToggle" checked onchange="handleEngineToggle('lumpsum')">
+                            <span class="slider"></span>
+                        </label>
+                        <h2 class="text-md font-bold text-white flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 bg-brand-blue rounded-full"></span>
+                            1. Lumpsum Deployment Engine
+                        </h2>
+                    </div>
+                    <div class="flex items-center gap-2 id-lumpsum-input-wrap">
+                        <span class="text-xs font-semibold whitespace-nowrap">Base:</span>
+                        <input type="number" id="lumpsumMasterAmount" value="10000000" step="500000" class="w-32 text-sm font-bold text-brand-blue">
+                    </div>
+                </div>
+                <div id="lumpsumControlBlock" class="space-y-4">
+                    <div id="lumpsumStatusBox" class="p-2 rounded-md text-xs flex justify-between items-center transition-all">
+                        <span id="lumpsumStatusText">Checking allocations...</span>
+                        <span id="lumpsumStatusBadge" class="badge">0%</span>
+                    </div>
+                    <div id="lumpsumContainer" class="space-y-2.5 max-h-[250px] overflow-y-auto pr-1"></div>
+                    <button onclick="addSleeve('lumpsum')" class="w-full py-2 bg-slate-800/60 hover:bg-slate-800 border border-dashed border-slate-700 rounded-lg text-xs font-medium text-slate-300 transition flex items-center justify-center gap-1 light:text-slate-700">
+                        + Add New Lumpsum Sleeve
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-panel p-5 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-brand-blue">Yearly Lumpsum Accumulation Ledger</h3>
+                    <span class="text-[10px] bg-brand-blue/10 text-brand-blue font-semibold px-2 py-0.5 rounded border border-brand-blue/20">Lumpsum Track</span>
+                </div>
+                <div class="overflow-x-auto max-h-[300px]">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 font-semibold sticky top-0 bg-slate-950 z-10 py-1">
+                                <th class="pb-2">Timeline</th>
+                                <th class="pb-2 text-right">Opening Corpus</th>
+                                <th class="pb-2 text-right">Yield Generated</th>
+                                <th class="pb-2 text-right text-brand-blue">Compounded Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lumpsumLedgerBody" class="divide-y divide-slate-800/50 text-slate-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-panel p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3 gap-2">
+                    <div class="flex items-center gap-3">
+                        <label class="switch shrink-0">
+                            <input type="checkbox" id="monthlyToggle" checked onchange="handleEngineToggle('monthly')">
+                            <span class="slider"></span>
+                        </label>
+                        <h2 class="text-md font-bold text-white flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 bg-brand-teal rounded-full"></span>
+                            2. Monthly Cash-Flow Engine
+                        </h2>
+                    </div>
+                    <div class="flex items-center gap-2 id-monthly-input-wrap">
+                        <span class="text-xs font-semibold whitespace-nowrap">Initial Flow:</span>
+                        <input type="number" id="monthlyMasterAmount" value="300000" step="10000" class="w-32 text-sm font-bold text-brand-teal">
+                    </div>
+                </div>
+                <div id="monthlyControlBlock" class="space-y-4">
+                    <div id="monthlyStatusBox" class="p-2 rounded-md text-xs flex justify-between items-center transition-all">
+                        <span id="monthlyStatusText">Checking allocations...</span>
+                        <span id="monthlyStatusBadge" class="badge">0%</span>
+                    </div>
+                    <div id="monthlyContainer" class="space-y-2.5 max-h-[250px] overflow-y-auto pr-1"></div>
+                    <button onclick="addSleeve('monthly')" class="w-full py-2 bg-slate-800/60 hover:bg-slate-800 border border-dashed border-slate-700 rounded-lg text-xs font-medium text-slate-300 transition flex items-center justify-center gap-1 light:text-slate-700">
+                        + Add New Monthly Inflow Sleeve
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-panel p-5 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-brand-teal">Monthly Flow Accumulation Ledger</h3>
+                    <span class="text-[10px] bg-brand-teal/10 text-brand-teal font-semibold px-2 py-0.5 rounded border border-brand-teal/20">SIP Track</span>
+                </div>
+                <div class="overflow-x-auto max-h-[300px]">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 font-semibold sticky top-0 bg-slate-950 z-10 py-1">
+                                <th class="pb-2">Timeline</th>
+                                <th class="pb-2 text-right">Monthly Scale</th>
+                                <th class="pb-2 text-right">Annual Inflows</th>
+                                <th class="pb-2 text-right">Cumulative Cap.</th>
+                                <th class="pb-2 text-right text-brand-teal">Compounded Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sipLedgerBody" class="divide-y divide-slate-800/50 text-slate-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel p-5 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h2 class="text-md font-bold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    3. Total Integrated Portfolio Master Ledger
+                </h2>
+                <span class="text-xs bg-purple-500/10 text-purple-400 font-bold px-3 py-1 rounded border border-purple-500/20">Aggregated Global Runway</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 font-semibold py-2">
+                            <th class="pb-2">Timeline Year</th>
+                            <th class="pb-2 text-right">Annual Injected (Lump + SIP)</th>
+                            <th class="pb-2 text-right">Cumulative Capital Contributed</th>
+                            <th class="pb-2 text-right">Lumpsum Sleeve Balance</th>
+                            <th class="pb-2 text-right">Monthly Inflow Balance</th>
+                            <th class="pb-2 text-right text-purple-400 font-bold text-sm">Nominal Corpus</th>
+                            <th class="pb-2 text-right text-brand-blue font-bold">Real Purchasing Power</th>
+                        </tr>
+                    </thead>
+                    <tbody id="totalLedgerBody" class="divide-y divide-slate-800/50 text-slate-200 font-medium"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glass-panel p-5 space-y-3">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300">Terminal Portfolio Strategy Matrix</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 font-semibold">
+                            <th class="pb-2">Sleeve / Asset Category</th>
+                            <th class="pb-2" style="text-align: center;">Engine Vector</th>
+                            <th class="pb-2 text-right">Alloc Weight %</th>
+                            <th class="pb-2 text-right">Initial Commitment Amount</th>
+                            <th class="pb-2 text-right">Terminal Value Share</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrixTableBody" class="divide-y divide-slate-800/50 text-slate-300"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 glass-panel p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300">Integrated Compounding Lifecycle Curve</h3>
+                    <div class="flex gap-4 text-[11px] text-slate-400">
+                        <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-brand-teal mr-1.5"></span>Nominal Target</span>
+                        <span class="flex items-center"><span class="w-2.5 h-0.5 border-t border-dashed border-brand-blue mr-1.5"></span>Inflation Adjusted Real</span>
+                    </div>
+                </div>
+                <div class="relative h-[280px] w-full">
+                    <canvas id="lifecycleChart"></canvas>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 glass-panel p-5">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-4">Terminal Portfolio Asset Distribution</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                    <div class="sm:col-span-5 relative h-[180px] w-full">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                    <div class="sm:col-span-7 space-y-1.5 max-h-[180px] overflow-y-auto text-[11px]" id="distributionLegend"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const inrFormatter = new Intl.NumberFormat('en-IN', {
+            style: 'currency', currency: 'INR', maximumFractionDigits: 0
+        });
+
+        const DEFAULT_CONFIG = {
+            macro: { horizon: 10, inflation: 7.0, stepUp: 8.0 },
+            theme: 'dark',
+            engines: { lumpsum: true, monthly: true },
+            lumpsumMaster: 10000000,
+            monthlyMaster: 300000,
+            lumpsumSleeves: [
+                { id: 'l1', name: 'Flexi-Cap / Structural Equity MFs', allocation: 35, rate: 13.5, active: true },
+                { id: 'l2', name: 'Mid & Small-Cap Direct Growth MFs', allocation: 25, rate: 15.0, active: true },
+                { id: 'l3', name: 'Tactical Swing / Direct Equity Runway', allocation: 15, rate: 16.0, active: true },
+                { id: 'l4', name: 'Global Tech / US Structural Multi-Asset', allocation: 15, rate: 12.0, active: true },
+                { id: 'l5', name: 'Sovereign Gold Bonds / Physical Gold Hedge', allocation: 10, rate: 8.5, active: true }
+            ],
+            monthlySleeves: [
+                { id: 'm1', name: 'Core Flexi-Cap Allocation Portfolio', allocation: 40, rate: 13.5, active: true },
+                { id: 'm2', name: 'Aggressive Alpha Mid/Small-Cap Direct MFs', allocation: 35, rate: 15.0, active: true },
+                { id: 'm3', name: 'Global Tech ETF / Disruptive Automation Fund', allocation: 15, rate: 12.0, active: true },
+                { id: 'm4', name: 'Active Swing Dry Powder Reserve', allocation: 10, rate: 7.0, active: true }
+            ]
+        };
+
+        let state = {};
+        let chartInstance = null;
+        let distributionChartInstance = null;
+        const PALETTE = ['#0d9488', '#2563eb', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#6366f1'];
+
+        function initSystem() {
+            const stored = localStorage.getItem('wealth_blueprint_state_v6');
+            if (stored) {
+                try { state = JSON.parse(stored); } catch (e) { state = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); }
+            } else {
+                state = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+            }
+            if (!state.theme) state.theme = 'dark';
+            if (!state.engines) state.engines = { lumpsum: true, monthly: true };
+            
+            state.lumpsumSleeves.forEach(s => { if(s.active === undefined) s.active = true; });
+            state.monthlySleeves.forEach(s => { if(s.active === undefined) s.active = true; });
+
+            applyTheme(state.theme);
+            
+            document.getElementById('macroHorizon').value = state.macro.horizon;
+            document.getElementById('macroInflation').value = state.macro.inflation;
+            document.getElementById('macroStepUp').value = state.macro.stepUp;
+            document.getElementById('lumpsumMasterAmount').value = state.lumpsumMaster;
+            document.getElementById('monthlyMasterAmount').value = state.monthlyMaster;
+            
+            document.getElementById('lumpsumToggle').checked = state.engines.lumpsum;
+            document.getElementById('monthlyToggle').checked = state.engines.monthly;
+
+            renderSleeves('lumpsum');
+            renderSleeves('monthly');
+            handleEngineToggleVisuals('lumpsum', state.engines.lumpsum);
+            handleEngineToggleVisuals('monthly', state.engines.monthly);
+            
+            executeArchitectureCalculations();
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('wealth_blueprint_state_v6', JSON.stringify(state));
+            applyTheme(state.theme);
+            executeArchitectureCalculations(); 
+        }
+
+        function applyTheme(theme) {
+            const html = document.getElementById('htmlTag');
+            if (theme === 'light') {
+                html.classList.remove('dark'); html.classList.add('light');
+            } else {
+                html.classList.remove('light'); html.classList.add('dark');
+            }
+        }
+
+        function handleEngineToggle(type) {
+            const isChecked = document.getElementById(type + 'Toggle').checked;
+            state.engines[type] = isChecked;
+            handleEngineToggleVisuals(type, isChecked);
+            syncInputToState();
+        }
+
+        function handleEngineToggleVisuals(type, isEnabled) {
+            const block = document.getElementById(type + 'ControlBlock');
+            if (isEnabled) {
+                block.classList.remove('engine-disabled');
+            } else {
+                block.classList.add('engine-disabled');
+            }
+        }
+
+        function resetToDefaults() {
+            if (confirm("Reset layout system configs back to baseline standards?")) {
+                localStorage.removeItem('wealth_blueprint_state_v6');
+                initSystem();
+            }
+        }
+
+        function syncInputToState() {
+            state.macro.horizon = parseInt(document.getElementById('macroHorizon').value) || 10;
+            state.macro.inflation = parseFloat(document.getElementById('macroInflation').value) || 0;
+            state.macro.stepUp = parseFloat(document.getElementById('macroStepUp').value) || 0;
+            state.lumpsumMaster = parseFloat(document.getElementById('lumpsumMasterAmount').value) || 0;
+            state.monthlyMaster = parseFloat(document.getElementById('monthlyMasterAmount').value) || 0;
+            
+            state.engines.lumpsum = document.getElementById('lumpsumToggle').checked;
+            state.engines.monthly = document.getElementById('monthlyToggle').checked;
+
+            state.lumpsumSleeves = [];
+            document.querySelectorAll('.lumpsum-row').forEach(row => {
+                const isActive = row.querySelector('.sleeve-toggle').checked;
+                if (!isActive) {
+                    row.classList.add('sleeve-disabled');
+                } else {
+                    row.classList.remove('sleeve-disabled');
+                }
+                state.lumpsumSleeves.push({
+                    id: row.dataset.id, 
+                    name: row.querySelector('.sleeve-name').value,
+                    allocation: parseFloat(row.querySelector('.sleeve-alloc').value) || 0,
+                    rate: parseFloat(row.querySelector('.sleeve-rate').value) || 0,
+                    active: isActive
+                });
+            });
+
+            state.monthlySleeves = [];
+            document.querySelectorAll('.monthly-row').forEach(row => {
+                const isActive = row.querySelector('.sleeve-toggle').checked;
+                if (!isActive) {
+                    row.classList.add('sleeve-disabled');
+                } else {
+                    row.classList.remove('sleeve-disabled');
+                }
+                state.monthlySleeves.push({
+                    id: row.dataset.id, 
+                    name: row.querySelector('.sleeve-name').value,
+                    allocation: parseFloat(row.querySelector('.sleeve-alloc').value) || 0,
+                    rate: parseFloat(row.querySelector('.sleeve-rate').value) || 0,
+                    active: isActive
+                });
+            });
+
+            localStorage.setItem('wealth_blueprint_state_v6', JSON.stringify(state));
+            executeArchitectureCalculations();
+        }
+
+        function addSleeve(type) {
+            const container = type === 'lumpsum' ? state.lumpsumSleeves : state.monthlySleeves;
+            container.push({ id: (type === 'lumpsum' ? 'l' : 'm') + Date.now(), name: 'Custom Asset Sleeve', allocation: 0, rate: 12.0, active: true });
+            renderSleeves(type);
+            syncInputToState();
+        }
+
+        function removeSleeve(type, id) {
+            if (type === 'lumpsum') state.lumpsumSleeves = state.lumpsumSleeves.filter(i => i.id !== id);
+            else state.monthlySleeves = state.monthlySleeves.filter(i => i.id !== id);
+            renderSleeves(type);
+            syncInputToState();
+        }
+
+        function renderSleeves(type) {
+            const container = document.getElementById(type + 'Container');
+            const data = type === 'lumpsum' ? state.lumpsumSleeves : state.monthlySleeves;
+            container.innerHTML = '';
+            data.forEach(sleeve => {
+                const isSleeveActive = sleeve.active !== false;
+                const div = document.createElement('div');
+                div.className = `${type}-row flex flex-col sm:flex-row items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-800 ${!isSleeveActive ? 'sleeve-disabled' : ''}`;
+                div.dataset.id = sleeve.id;
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 w-full sm:w-auto sm:flex-1">
+                        <label class="mini-switch shrink-0">
+                            <input type="checkbox" class="sleeve-toggle" ${isSleeveActive ? 'checked' : ''} onchange="syncInputToState()">
+                            <span class="mini-slider"></span>
+                        </label>
+                        <input type="text" class="sleeve-name text-xs font-medium bg-slate-950 w-full" value="${sleeve.name}" oninput="syncInputToState()">
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-between">
+                        <div class="flex items-center gap-1">
+                            <span class="text-[10px] text-slate-500">Alloc %</span>
+                            <input type="number" class="sleeve-alloc text-xs font-bold text-center w-12" value="${sleeve.allocation}" oninput="syncInputToState()">
+                        </div>
+                        <div class="flex items-center gap-1 px-1">
+                            <span class="sleeve-calculated-amount text-xs font-semibold text-slate-400 min-w-[70px] text-right">₹0</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-[10px] text-slate-500">CAGR%</span>
+                            <input type="number" class="sleeve-rate text-xs font-bold text-emerald-400 text-center w-12" value="${sleeve.rate}" step="0.5" oninput="syncInputToState()">
+                        </div>
+                        <button onclick="removeSleeve('${type}', '${sleeve.id}')" class="p-1 text-slate-400 hover:text-brand-rose transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function executeArchitectureCalculations() {
+            const years = state.macro.horizon;
+            const isLumpEnabled = state.engines.lumpsum;
+            const isMonthlyEnabled = state.engines.monthly;
+
+            // CRITICAL FIX: Only aggregate allocations for rows that are ACTIVE and NOT disabled
+            const totalLumpsumAlloc = state.lumpsumSleeves.reduce((sum, item) => sum + (item.active !== false ? item.allocation : 0), 0);
+            document.getElementById('lumpsumStatusBadge').innerText = totalLumpsumAlloc + '%';
+            document.getElementById('lumpsumStatusBox').className = totalLumpsumAlloc === 100 ? "p-2 rounded-md text-xs flex justify-between items-center bg-brand-emerald/10 text-brand-emerald border border-brand-emerald/20" : "p-2 rounded-md text-xs flex justify-between items-center bg-brand-rose/10 text-brand-rose border border-brand-rose/20";
+            document.getElementById('lumpsumStatusText').innerText = totalLumpsumAlloc === 100 ? "Active Allocation Balanced" : "Error: Active sleeves must total 100%";
+
+            const totalMonthlyAlloc = state.monthlySleeves.reduce((sum, item) => sum + (item.active !== false ? item.allocation : 0), 0);
+            document.getElementById('monthlyStatusBadge').innerText = totalMonthlyAlloc + '%';
+            document.getElementById('monthlyStatusBox').className = totalMonthlyAlloc === 100 ? "p-2 rounded-md text-xs flex justify-between items-center bg-brand-emerald/10 text-brand-emerald border border-brand-emerald/20" : "p-2 rounded-md text-xs flex justify-between items-center bg-brand-rose/10 text-brand-rose border border-brand-rose/20";
+            document.getElementById('monthlyStatusText').innerText = totalMonthlyAlloc === 100 ? "Active Allocation Balanced" : "Error: Active sleeves must total 100%";
+
+            // Update row calculated values visually
+            document.querySelectorAll('.lumpsum-row').forEach(row => {
+                const sleeveObj = state.lumpsumSleeves.find(s => s.id === row.dataset.id);
+                const activeLumpAmt = (isLumpEnabled && sleeveObj && sleeveObj.active !== false) ? state.lumpsumMaster : 0;
+                row.querySelector('.sleeve-calculated-amount').innerText = inrFormatter.format(activeLumpAmt * ((parseFloat(row.querySelector('.sleeve-alloc').value)||0)/100));
+            });
+            document.querySelectorAll('.monthly-row').forEach(row => {
+                const sleeveObj = state.monthlySleeves.find(s => s.id === row.dataset.id);
+                const activeMonthlyAmt = (isMonthlyEnabled && sleeveObj && sleeveObj.active !== false) ? state.monthlyMaster : 0;
+                row.querySelector('.sleeve-calculated-amount').innerText = inrFormatter.format(activeMonthlyAmt * ((parseFloat(row.querySelector('.sleeve-alloc').value)||0)/100));
+            });
+
+            // True operational setup base capital extraction mapping out disabled elements
+            let effectiveInitialLump = 0;
+            let lumpsumSleeveTrackers = {};
+            state.lumpsumSleeves.forEach(item => {
+                if (isLumpEnabled && item.active !== false) {
+                    let allocatedCash = state.lumpsumMaster * (item.allocation / 100);
+                    lumpsumSleeveTrackers[item.id] = allocatedCash;
+                    effectiveInitialLump += allocatedCash;
+                } else {
+                    lumpsumSleeveTrackers[item.id] = 0;
+                }
+            });
+
+            let effectiveInitialMonthly = 0;
+            let monthlySleeveTrackers = {};
+            state.monthlySleeves.forEach(item => {
+                monthlySleeveTrackers[item.id] = 0;
+                if (isMonthlyEnabled && item.active !== false) {
+                    effectiveInitialMonthly += state.monthlyMaster * (item.allocation / 100);
+                }
+            });
+
+            // Trackers configuration setups
+            let labels = ['Year 0'];
+            let lumpsumTrackVal = [effectiveInitialLump];
+            let monthlyTrackVal = [0];
+            let unifiedNominalTrack = [effectiveInitialLump];
+            let unifiedRealTrack = [effectiveInitialLump];
+            let cumulativeInjectedTrack = [effectiveInitialLump];
+            let annualInflowsTrack = [0];
+
+            let currentMonthlySipScale = state.monthlyMaster; 
+            let runningInjectedCapital = effectiveInitialLump;
+
+            // Chrono Chronology Loop Calculations Engine Processing
+            for (let y = 1; y <= years; y++) {
+                labels.push('Year ' + y);
+                
+                // Track Lumpsum Compounding Vector
+                state.lumpsumSleeves.forEach(item => {
+                    if (isLumpEnabled && item.active !== false) {
+                        lumpsumSleeveTrackers[item.id] *= (1 + (item.rate / 100));
+                    }
+                });
+                let yearlyLumpTotal = Object.values(lumpsumSleeveTrackers).reduce((a, b) => a + b, 0);
+                lumpsumTrackVal.push(yearlyLumpTotal);
+
+                // Track Cash-Flow Inflow compounding matrix monthly sequence tracking steps
+                let annualInflowAccumulator = 0;
+                for (let m = 1; m <= 12; m++) {
+                    state.monthlySleeves.forEach(item => {
+                        if (isMonthlyEnabled && item.active !== false) {
+                            let stepSipSize = currentMonthlySipScale * (item.allocation / 100);
+                            if (m === 1) annualInflowAccumulator += stepSipSize * 12;
+                            
+                            monthlySleeveTrackers[item.id] += stepSipSize;
+                            monthlySleeveTrackers[item.id] *= (1 + ((item.rate / 100) / 12));
+                        }
+                    });
+                }
+                
+                annualInflowsTrack.push(isMonthlyEnabled ? annualInflowAccumulator : 0);
+                runningInjectedCapital += (isMonthlyEnabled ? annualInflowAccumulator : 0);
+                cumulativeInjectedTrack.push(runningInjectedCapital);
+
+                let yearlyMonthlyTotal = Object.values(monthlySleeveTrackers).reduce((a, b) => a + b, 0);
+                monthlyTrackVal.push(yearlyMonthlyTotal);
+
+                // Integrated Composite Multi-Vector System Union Processing
+                let totalNominal = yearlyLumpTotal + yearlyMonthlyTotal;
+                unifiedNominalTrack.push(totalNominal);
+                unifiedRealTrack.push(totalNominal / Math.pow(1 + (state.macro.inflation / 100), y));
+
+                if (y < years) currentMonthlySipScale *= (1 + (state.macro.stepUp / 100));
+            }
+
+            // Populate Lumpsum Table Ledger
+            const lumpsumLedgerBody = document.getElementById('lumpsumLedgerBody');
+            lumpsumLedgerBody.innerHTML = '';
+            for (let y = 1; y <= years; y++) {
+                let openBal = lumpsumTrackVal[y - 1];
+                let closeBal = lumpsumTrackVal[y];
+                let yieldGen = closeBal - openBal;
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 font-medium text-white">Year ${y}</td>
+                    <td class="py-2 text-right text-slate-400">${inrFormatter.format(openBal)}</td>
+                    <td class="py-2 text-right text-emerald-400">+ ${inrFormatter.format(yieldGen)}</td>
+                    <td class="py-2 text-right font-bold text-brand-blue">${inrFormatter.format(closeBal)}</td>
+                `;
+                lumpsumLedgerBody.appendChild(tr);
+            }
+
+            // Populate Monthly SIP Table Ledger
+            const sipLedgerBody = document.getElementById('sipLedgerBody');
+            sipLedgerBody.innerHTML = '';
+            let currentSipScalerLoop = isMonthlyEnabled ? state.monthlyMaster : 0;
+            let tempInflowCumulator = 0;
+            for (let y = 1; y <= years; y++) {
+                let annualInf = annualInflowsTrack[y];
+                tempInflowCumulator += annualInf;
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 font-medium text-white">Year ${y}</td>
+                    <td class="py-2 text-right text-slate-400">${inrFormatter.format(currentSipScalerLoop)}/mo</td>
+                    <td class="py-2 text-right text-slate-400">${inrFormatter.format(annualInf)}</td>
+                    <td class="py-2 text-right text-slate-500">${inrFormatter.format(tempInflowCumulator)}</td>
+                    <td class="py-2 text-right font-bold text-brand-teal">${inrFormatter.format(monthlyTrackVal[y])}</td>
+                `;
+                sipLedgerBody.appendChild(tr);
+                if (isMonthlyEnabled) currentSipScalerLoop *= (1 + (state.macro.stepUp / 100));
+            }
+
+            // Populate Unified Integrated Global Portfolio Master Table Ledger
+            const totalLedgerBody = document.getElementById('totalLedgerBody');
+            totalLedgerBody.innerHTML = '';
+            for(let y = 1; y <= years; y++) {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 font-bold text-white text-center">Year ${y}</td>
+                    <td class="py-2 text-right text-slate-300">${inrFormatter.format(annualInflowsTrack[y])}</td>
+                    <td class="py-2 text-right text-slate-400">${inrFormatter.format(cumulativeInjectedTrack[y])}</td>
+                    <td class="py-2 text-right text-brand-blue/80">${inrFormatter.format(lumpsumTrackVal[y])}</td>
+                    <td class="py-2 text-right text-brand-teal/80">${inrFormatter.format(monthlyTrackVal[y])}</td>
+                    <td class="py-2 text-right font-extrabold text-purple-400 text-sm">${inrFormatter.format(unifiedNominalTrack[y])}</td>
+                    <td class="py-2 text-right font-bold text-brand-emerald">${inrFormatter.format(unifiedRealTrack[y])}</td>
+                `;
+                totalLedgerBody.appendChild(tr);
+            }
+
+            // Global Metrics Cards Updates
+            const finalNominal = unifiedNominalTrack[years];
+            const totalInjectedCapital = cumulativeInjectedTrack[years];
+            document.getElementById('statInvested').innerText = inrFormatter.format(totalInjectedCapital);
+            document.getElementById('statNominal').innerText = inrFormatter.format(finalNominal);
+            document.getElementById('statReal').innerText = inrFormatter.format(unifiedRealTrack[years]);
+            document.getElementById('statTerminalSip').innerText = inrFormatter.format(isMonthlyEnabled ? currentMonthlySipScale : 0);
+            
+            const totalGrowthMultiplier = totalInjectedCapital > 0 ? (finalNominal / totalInjectedCapital) : 0;
+            document.getElementById('statMultiplier').innerText = `${totalGrowthMultiplier.toFixed(1)}x Total Growth Multiplier`;
+
+            // Portfolio Composite Yield Internal Rate Engine Math Calculations Wrapper (CAGR / XIRR Approach)
+            let compositeCagr = 0;
+            if (totalInjectedCapital > 0 && finalNominal > 0) {
+                if (effectiveInitialMonthly === 0 && effectiveInitialLump > 0) {
+                    compositeCagr = (Math.pow((finalNominal / effectiveInitialLump), (1 / years)) - 1) * 100;
+                } else {
+                    let low = 0.0, high = 1.0;
+                    for (let i = 0; i < 40; i++) {
+                        let mid = (low + high) / 2;
+                        let fv = effectiveInitialLump * Math.pow(1 + mid, years);
+                        for (let y = 1; y <= years; y++) {
+                            fv += annualInflowsTrack[y] * Math.pow(1 + mid, years - y + 0.5);
+                        }
+                        if (fv > finalNominal) high = mid; else low = mid;
+                    }
+                    compositeCagr = low * 100;
+                }
+            }
+            document.getElementById('statCagr').innerText = `${compositeCagr.toFixed(1)}% Portfolio CAGR`;
+
+            // Strategy Matrix & Distribution Track mappings
+            const matrixBody = document.getElementById('matrixTableBody');
+            matrixBody.innerHTML = '';
+            let distributionMap = {};
+
+            state.lumpsumSleeves.forEach(item => {
+                if (isLumpEnabled && item.active !== false) {
+                    let termVal = lumpsumSleeveTrackers[item.id] || 0;
+                    distributionMap[item.name] = (distributionMap[item.name] || 0) + termVal;
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="py-2 font-medium text-white">${item.name}</td>
+                        <td class="py-2 text-center"><span class="badge bg-brand-blue/10 text-brand-blue border border-brand-blue/20">Lumpsum Sleeve</span></td>
+                        <td class="py-2 text-right font-semibold text-slate-300">${item.allocation}%</td>
+                        <td class="py-2 text-right text-slate-500">${inrFormatter.format(state.lumpsumMaster * (item.allocation/100))}</td>
+                        <td class="py-2 text-right font-bold text-white">${inrFormatter.format(termVal)}</td>
+                    `;
+                    matrixBody.appendChild(tr);
+                }
+            });
+
+            state.monthlySleeves.forEach(item => {
+                if (isMonthlyEnabled && item.active !== false) {
+                    let termVal = monthlySleeveTrackers[item.id] || 0;
+                    distributionMap[item.name] = (distributionMap[item.name] || 0) + termVal;
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="py-2 font-medium text-white">${item.name}</td>
+                        <td class="py-2 text-center"><span class="badge bg-brand-teal/10 text-brand-teal border border-brand-teal/20">Monthly SIP</span></td>
+                        <td class="py-2 text-right font-semibold text-slate-300">${item.allocation}%</td>
+                        <td class="py-2 text-right text-slate-500">${inrFormatter.format(state.monthlyMaster * (item.allocation/100))}/mo</td>
+                        <td class="py-2 text-right font-bold text-white">${inrFormatter.format(termVal)}</td>
+                    `;
+                    matrixBody.appendChild(tr);
+                }
+            });
+
+            if (Object.keys(distributionMap).length === 0) {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="5" class="py-4 text-center text-slate-500 font-medium tracking-wide">All Allocations and Deployment Engines Disabled</td>`;
+                matrixBody.appendChild(tr);
+            }
+
+            renderLifecycleChart(labels, cumulativeInjectedTrack, unifiedNominalTrack, unifiedRealTrack);
+            renderDistributionChart(distributionMap, finalNominal);
+        }
+
+        function renderLifecycleChart(labels, invested, nominal, real) {
+            const ctx = document.getElementById('lifecycleChart').getContext('2d');
+            if (chartInstance) { chartInstance.destroy(); }
+            const gridColor = state.theme === 'light' ? 'rgba(15, 23, 42, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+            const tickColor = state.theme === 'light' ? '#475569' : '#64748b';
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Nominal Value', data: nominal, borderColor: '#0d9488', backgroundColor: 'transparent', borderWidth: 3, tension: 0.35 },
+                        { label: 'Real Value', data: real, borderColor: '#2563eb', borderDash: [5, 4], backgroundColor: 'transparent', borderWidth: 2, tension: 0.35 },
+                        { label: 'Injected Capital', data: invested, borderColor: '#475569', backgroundColor: 'transparent', borderWidth: 1, tension: 0.1 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => v >= 10000000 ? '₹' + (v/10000000).toFixed(1) + ' Cr' : '₹' + (v/100000).toFixed(0) + ' L' } },
+                        x: { grid: { display: false }, ticks: { color: tickColor } }
+                    }
+                }
+            });
+        }
+
+        function renderDistributionChart(distributionMap, totalTerminalValue) {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            if (distributionChartInstance) { distributionChartInstance.destroy(); }
+
+            const entries = Object.entries(distributionMap).filter(([_, value]) => value > 0);
+            const labels = entries.map(([name, _]) => name);
+            const dataValues = entries.map(([_, value]) => value);
+            const colors = labels.map((_, i) => PALETTE[i % PALETTE.length]);
+
+            distributionChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: dataValues, backgroundColor: colors, borderWidth: 0, cutout: '70%' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            const legendContainer = document.getElementById('distributionLegend');
+            legendContainer.innerHTML = '';
+            
+            if(entries.length === 0) {
+                legendContainer.innerHTML = '<div class="text-slate-500 italic py-2">No active sleeves allocation assets found</div>';
+                return;
+            }
+
+            entries.forEach(([name, value], i) => {
+                const percentage = totalTerminalValue > 0 ? ((value / totalTerminalValue) * 100).toFixed(1) : 0;
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between text-slate-400 font-medium';
+                row.innerHTML = `
+                    <div class="flex items-center gap-1.5 truncate pr-2">
+                        <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${colors[i]}"></span>
+                        <span class="truncate text-white text-[11px]">${name}</span>
+                    </div>
+                    <span class="shrink-0 font-bold text-slate-400 text-[11px]">${percentage}%</span>
+                `;
+                legendContainer.appendChild(row);
+            });
+        }
+
+        const inputs = document.querySelectorAll('#macroHorizon, #macroInflation, #macroStepUp, #lumpsumMasterAmount, #monthlyMasterAmount');
+        inputs.forEach(input => input.addEventListener('input', syncInputToState));
+        window.onload = initSystem;
+    </script>
+</body>
+</html>

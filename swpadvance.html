@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advance SWP Calculator (Tax Optimized)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-app: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent-color: #4f46e5;
+            --accent-hover: #4338ca;
+            --success-color: #16a34a;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            --transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-app: #0b0f19;
+            --bg-card: #151f32;
+            --border-color: #243249;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --success-color: #4ade80;
+            --danger-color: #f87171;
+            --warning-color: #fbbf24;
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        body { background-color: var(--bg-app); color: var(--text-primary); padding: 2rem 1.5rem; transition: var(--transition); display: flex; justify-content: center; }
+        
+        .page-wrapper { width: 100%; max-width: 1400px; display: flex; flex-direction: column; gap: 2rem; }
+        .top-split { display: grid; grid-template-columns: 400px 1fr; gap: 2rem; align-items: start; }
+        
+        @media (max-width: 1150px) { .top-split { grid-template-columns: 1fr; } }
+
+        .card-panel { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); padding: 2rem; transition: var(--transition); height: fit-content; }
+        .header-ui { display: flex; justify-between: space-between; align-items: center; margin-bottom: 2rem; }
+        h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); }
+
+        .theme-toggle { background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-secondary); letter-spacing: -0.01em; }
+        
+        .input-wrap { position: relative; display: flex; align-items: center; }
+        .input-prefix { position: absolute; left: 0.75rem; font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); }
+        .input-suffix { position: absolute; right: 0.75rem; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); }
+        
+        input, select { width: 100%; padding: 0.75rem 0.85rem; border-radius: 10px; border: 1px solid var(--border-color); background-color: var(--bg-card); color: var(--text-primary); font-size: 0.95rem; font-weight: 500; outline: none; transition: var(--transition); }
+        input.has-prefix { padding-left: 1.9rem; }
+        input.has-suffix { padding-right: 1.9rem; }
+        input:focus, select:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1); }
+
+        .analytics-panel { display: flex; flex-direction: column; gap: 1.5rem; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .metric-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow-lg); }
+        .metric-val { font-size: 1.4rem; font-weight: 800; margin-top: 0.4rem; letter-spacing: -0.02em; }
+
+        .charts-workspace { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.5rem; height: 320px; width: 100%; }
+        
+        @media (max-width: 768px) {
+            .charts-workspace { grid-template-columns: 1fr; height: auto; }
+            .chart-panel-box { height: 260px !important; }
+        }
+
+        .chart-panel-box { background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow-lg); position: relative; height: 100%; display: flex; flex-direction: column; }
+        .chart-title { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+        .canvas-container { flex: 1; position: relative; min-height: 0; }
+
+        .full-width-ledger-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; box-shadow: var(--shadow-lg); overflow: hidden; width: 100%; margin-top: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; letter-spacing: -0.01em; }
+        th { background: var(--bg-app); color: var(--text-secondary); font-weight: 700; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; }
+        td { padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--border-color); color: var(--text-primary); vertical-align: middle; line-height: 1.4; }
+        tr:last-child td { border-bottom: none; }
+        
+        .directives-cell-container { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; justify-content: space-between; min-height: 38px; }
+        .chips-stack { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+        
+        .badge { padding: 0.35rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: var(--shadow-sm); }
+        .badge-infusion { background: rgba(22, 163, 74, 0.08); color: var(--success-color); border: 1px solid rgba(22, 163, 74, 0.15); }
+        .badge-withdrew { background: rgba(217, 119, 6, 0.08); color: var(--warning-color); border: 1px solid rgba(217, 119, 6, 0.15); }
+        
+        .chip-delete-btn { background: transparent; border: none; color: inherit; cursor: pointer; display: flex; align-items: center; opacity: 0.7; font-size: 1rem; padding: 0 0.1rem; line-height: 1; }
+        .chip-delete-btn:hover { opacity: 1; }
+
+        .btn-inline-add { background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.75rem; font-weight: 700; padding: 0.4rem 0.75rem; border-radius: 6px; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; }
+        .btn-inline-add:hover { border-color: var(--accent-color); color: var(--accent-color); background: rgba(79, 70, 229, 0.04); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-overlay.is-active { opacity: 1; pointer-events: auto; }
+        
+        .modal-body { background: var(--bg-card); border: 1px solid var(--border-color); width: 100%; max-width: 360px; padding: 1.5rem; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); transform: scale(0.95); transition: transform 0.2s ease; }
+        .modal-overlay.is-active .modal-body { transform: scale(1); }
+        .modal-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+        .modal-actions-row { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem; }
+        
+        .btn-secondary { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+        .btn-secondary:hover { background: var(--bg-app); color: var(--text-primary); }
+        .modal-body .btn-primary { background: var(--accent-color); color: white; border: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; width: auto; padding: 0.6rem 1.2rem; border-radius: 8px; transition: var(--transition); }
+        .modal-body .btn-primary:hover { background: var(--accent-hover); }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+    <div class="top-split">
+        <div class="card-panel">
+            <div class="header-ui" style="display: flex; justify-content: space-between; align-items: center;">
+                <h1>Advance SWP Calculator</h1>
+                <button class="theme-toggle" id="themeToggleBtn" type="button" aria-label="Toggle Interface Theme">
+                    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+            </div>
+
+            <form id="swpForm">
+                <div class="form-group">
+                    <label for="initialCorpus">Initial Capital Corpus</label>
+                    <div class="input-wrap">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="initialCorpus" value="10000000" min="1000" class="has-prefix" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="monthlySwp">Fixed Monthly SWP Payout</label>
+                    <div class="input-wrap">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="monthlySwp" value="50000" min="0" class="has-prefix" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="returnRate">Expected Return (Yr)</label>
+                        <div class="input-wrap">
+                            <input type="number" id="returnRate" value="12" step="0.1" min="1" max="50" class="has-suffix" required>
+                            <span class="input-suffix">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="tenure">Horizon Length</label>
+                        <div class="input-wrap">
+                            <input type="number" id="tenure" value="25" min="1" max="50" class="has-suffix" required>
+                            <span class="input-suffix">Yrs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inflation">Expected Inflation</label>
+                        <div class="input-wrap">
+                            <input type="number" id="inflation" value="6" min="0" max="20" class="has-suffix" required>
+                            <span class="input-suffix">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="taxRate">LTCG Tax Rate</label>
+                        <div class="input-wrap">
+                            <input type="number" id="taxRate" value="12.5" step="0.1" min="0" max="40" class="has-suffix" required>
+                            <span class="input-suffix">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="taxExemption">Annual Tax-Exempt Gains Limit</label>
+                    <div class="input-wrap">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="taxExemption" value="125000" min="0" class="has-prefix" required>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="analytics-panel">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <label>Total Extracted Wealth</label>
+                    <div class="metric-val" id="totalExtracted" style="color: var(--accent-color);">₹0</div>
+                </div>
+                <div class="metric-card">
+                    <label>Terminal Balance (YE)</label>
+                    <div class="metric-val" id="terminalBalance">₹0</div>
+                </div>
+                <div class="metric-card">
+                    <label>Real Value (Inflation Adj.)</label>
+                    <div class="metric-val" id="realValue" style="color: var(--success-color);">₹0</div>
+                </div>
+                <div class="metric-card">
+                    <label>Total LTCG Taxes Paid</label>
+                    <div class="metric-val" id="totalTax" style="color: var(--danger-color);">₹0</div>
+                </div>
+            </div>
+
+            <div class="charts-workspace">
+                <div class="chart-panel-box">
+                    <div class="chart-title">Capital Longevity Curve Spectrum</div>
+                    <div class="canvas-container">
+                        <canvas id="longevityChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-panel-box">
+                    <div class="chart-title">Portfolio Allocation Distribution</div>
+                    <div class="canvas-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="full-width-ledger-container">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 1rem; letter-spacing: -0.01em;">
+            Systematic De-accumulation Ledger Projection Architecture (With Annual ₹1.25L Exemption Mechanics)
+        </div>
+        <div style="width: 100%; overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Year Index</th>
+                        <th>Opening Balance</th>
+                        <th>Yearly Regular SWP</th>
+                        <th>Ad-Hoc Adjustments</th>
+                        <th>Closing Balance (YE)</th>
+                        <th style="min-width: 320px;">Life-Event Injectors</th>
+                    </tr>
+                </thead>
+                <tbody id="ledgerBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="eventModalOverlay">
+    <div class="modal-body">
+        <div class="modal-title" id="modalTargetYearTitle">Add Adjustment (Year X)</div>
+        
+        <div class="form-group">
+            <label for="modalAction">Transaction Protocol Variant</label>
+            <select id="modalAction">
+                <option value="withdraw">Premature Bulk Withdrawal</option>
+                <option value="infusion">Ad-Hoc Capital Infusion</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="modalAmount">Transaction Amount Value</label>
+            <div class="input-wrap">
+                <span class="input-prefix">₹</span>
+                <input type="number" id="modalAmount" placeholder="e.g. 500000" min="1" class="has-prefix">
+            </div>
+        </div>
+
+        <div class="modal-actions-row">
+            <button type="button" class="btn-secondary" id="closeModalBtn">Cancel</button>
+            <button type="button" class="btn-primary" id="saveEventBtn">Inject Action</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const htmlEl = document.documentElement;
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const swpForm = document.getElementById('swpForm');
+    const ledgerBody = document.getElementById('ledgerBody');
+
+    const eventModalOverlay = document.getElementById('eventModalOverlay');
+    const modalTargetYearTitle = document.getElementById('modalTargetYearTitle');
+    const modalAction = document.getElementById('modalAction');
+    const modalAmount = document.getElementById('modalAmount');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const saveEventBtn = document.getElementById('saveEventBtn');
+
+    const sunSvg = `<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>`;
+    const moonSvg = `<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>`;
+    
+    let lineChart = null;
+    let pieChart = null;
+    
+    let timelineEventsData = {}; 
+    let activeModalYearTarget = null;
+
+    function initTheme() {
+        const activeTheme = localStorage.getItem('swp-calc-theme') || 'light';
+        htmlEl.setAttribute('data-theme', activeTheme);
+        themeIcon.innerHTML = activeTheme === 'dark' ? sunSvg : moonSvg;
+        if(lineChart || pieChart) rebuildChartEngines();
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        const targetTheme = htmlEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        htmlEl.setAttribute('data-theme', targetTheme);
+        localStorage.setItem('swp-calc-theme', targetTheme);
+        themeIcon.innerHTML = targetTheme === 'dark' ? sunSvg : moonSvg;
+        rebuildChartEngines();
+    });
+
+    function cacheStateData() {
+        const inputs = ['initialCorpus', 'monthlySwp', 'returnRate', 'tenure', 'inflation', 'taxRate', 'taxExemption'];
+        const packet = {};
+        inputs.forEach(id => packet[id] = document.getElementById(id).value);
+        packet['timelineEventsData'] = timelineEventsData;
+        localStorage.setItem('ledger-integrated-swp-cache-v2', JSON.stringify(packet));
+    }
+
+    function rehydrateCachedState() {
+        const dataJson = localStorage.getItem('ledger-integrated-swp-cache-v2');
+        if(!dataJson) return false;
+        try {
+            const parsed = JSON.parse(dataJson);
+            Object.keys(parsed).forEach(key => {
+                if(key !== 'timelineEventsData' && document.getElementById(key)) {
+                    document.getElementById(key).value = parsed[key];
+                }
+            });
+            timelineEventsData = parsed.timelineEventsData || {};
+            return true;
+        } catch(e) {
+            return false;
+        }
+    }
+
+    function formatIndianShorthand(num) {
+        if (num === null || isNaN(num) || num <= 0) return '₹0';
+        const absNum = Math.abs(num);
+        let formatted = '';
+        if (absNum >= 10000000) {
+            formatted = (num / 10000000).toFixed(2);
+            formatted = parseFloat(formatted) + ' Cr';
+        } else if (absNum >= 100000) {
+            formatted = (num / 100000).toFixed(2);
+            formatted = parseFloat(formatted) + ' Lakh';
+        } else {
+            formatted = new Intl.NumberFormat('en-IN').format(Math.round(num));
+        }
+        return '₹' + formatted;
+    }
+
+    function openModifierModal(yearNum) {
+        activeModalYearTarget = yearNum;
+        modalTargetYearTitle.innerText = `Add Real Life-Event Impact (Year ${yearNum})`;
+        modalAction.value = 'withdraw';
+        modalAmount.value = '';
+        eventModalOverlay.classList.add('is-active');
+    }
+
+    function closeModifierModal() {
+        eventModalOverlay.classList.remove('is-active');
+        activeModalYearTarget = null;
+    }
+
+    closeModalBtn.addEventListener('click', closeModifierModal);
+    
+    saveEventBtn.addEventListener('click', () => {
+        if (!activeModalYearTarget) return;
+        const type = modalAction.value;
+        const amount = parseFloat(modalAmount.value) || 0;
+
+        if (amount <= 0) return;
+
+        if (!timelineEventsData[activeModalYearTarget]) {
+            timelineEventsData[activeModalYearTarget] = [];
+        }
+
+        timelineEventsData[activeModalYearTarget].push({ type, amount });
+        
+        cacheStateData();
+        closeModifierModal();
+        executeCalculationPipeline();
+    });
+
+    window.deleteStackedEventNode = function(yearNum, index) {
+        if (timelineEventsData[yearNum]) {
+            timelineEventsData[yearNum].splice(index, 1);
+            if (timelineEventsData[yearNum].length === 0) {
+                delete timelineEventsData[yearNum];
+            }
+            cacheStateData();
+            executeCalculationPipeline();
+        }
+    };
+
+    function executeCalculationPipeline() {
+        const initialCorpus = parseFloat(document.getElementById('initialCorpus').value) || 0;
+        const monthlySwp = parseFloat(document.getElementById('monthlySwp').value) || 0;
+        const annualReturnRate = parseFloat(document.getElementById('returnRate').value) || 0;
+        const totalHorizonYears = parseInt(document.getElementById('tenure').value) || 1;
+        const targetedInflation = parseFloat(document.getElementById('inflation').value) || 0;
+        const standardLtcgTaxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+        const annualExemptionLimit = parseFloat(document.getElementById('taxExemption').value) || 0;
+
+        const calculatedMonthlyRate = (annualReturnRate / 100) / 12;
+        
+        let runningCorpus = initialCorpus;
+        let cumulativeGainsPool = 0; 
+        let globalExtractedWealth = 0;
+        let globalTaxesPaid = 0;
+        let isDepleted = false;
+        let depletionYearIndex = null;
+
+        const timelineLabels = [];
+        const trackingWealthVector = [];
+        const trackingExtractedVector = [];
+        const trackingInflationAdjustedVector = [];
+        
+        let compiledLedgerHtml = '';
+
+        for (let year = 1; year <= totalHorizonYears; year++) {
+            if (isDepleted) {
+                timelineLabels.push(`Year ${year}`);
+                trackingWealthVector.push(0);
+                trackingExtractedVector.push(Math.round(globalExtractedWealth));
+                trackingInflationAdjustedVector.push(0);
+
+                compiledLedgerHtml += `
+                    <tr style="opacity: 0.45;">
+                        <td><strong>Year ${year}</strong></td>
+                        <td>₹0</td>
+                        <td>₹0</td>
+                        <td>—</td>
+                        <td style="color:var(--danger-color); font-weight:700;">Exhausted</td>
+                        <td>—</td>
+                    </tr>`;
+                continue;
+            }
+
+            const openingYearlyBalance = runningCorpus;
+            const eventsForYear = timelineEventsData[year] || [];
+            
+            // 1. Process Ad-Hoc Infusions at start of year index
+            let yearTotalInfusions = 0;
+            eventsForYear.filter(e => e.type === 'infusion').forEach(e => {
+                runningCorpus += e.amount;
+                yearTotalInfusions += e.amount;
+            });
+
+            let yearRegularSwpExtracted = 0;
+            let yearGainsTaxed = 0;
+            
+            // Reset realized gain pool counter for the new financial year layout
+            let yearlyGainsRealizedThisFY = 0;
+
+            // Sequential Monthly Loop
+            for (let m = 1; m <= 12; m++) {
+                if (runningCorpus <= 0) {
+                    runningCorpus = 0;
+                    isDepleted = true;
+                    break;
+                }
+
+                let currentWithdrawal = monthlySwp;
+                if (runningCorpus < currentWithdrawal) {
+                    currentWithdrawal = runningCorpus;
+                }
+
+                if (currentWithdrawal > 0) {
+                    // Extract exactly what portion of the current corpus contains accrued portfolio growth
+                    const gainRatio = runningCorpus > 0 ? Math.min(1, Math.max(0, cumulativeGainsPool / runningCorpus)) : 0;
+                    const gainComponent = currentWithdrawal * gainRatio;
+                    
+                    // Core Exemption Filter: Compute taxes only on gains exceeding the legal threshold limit per FY
+                    let taxableGainAmount = 0;
+                    if (yearlyGainsRealizedThisFY + gainComponent > annualExemptionLimit) {
+                        if (yearlyGainsRealizedThisFY < annualExemptionLimit) {
+                            taxableGainAmount = (yearlyGainsRealizedThisFY + gainComponent) - annualExemptionLimit;
+                        } else {
+                            taxableGainAmount = gainComponent;
+                        }
+                    }
+
+                    const currentTaxOutflux = taxableGainAmount * (standardLtcgTaxRate / 100);
+                    
+                    cumulativeGainsPool = Math.max(0, cumulativeGainsPool - gainComponent);
+                    yearlyGainsRealizedThisFY += gainComponent;
+                    
+                    yearRegularSwpExtracted += currentWithdrawal;
+                    yearGainsTaxed += currentTaxOutflux;
+
+                    const totalDeduction = currentWithdrawal + currentTaxOutflux;
+                    if (runningCorpus <= totalDeduction) {
+                        runningCorpus = 0;
+                        isDepleted = true;
+                        break;
+                    } else {
+                        runningCorpus -= totalDeduction;
+                    }
+                }
+
+                // Compounding returns accrue on the remaining balance at the end of the month phase
+                if (runningCorpus > 0) {
+                    const monthlyInterestGenerated = runningCorpus * calculatedMonthlyRate;
+                    cumulativeGainsPool += monthlyInterestGenerated;
+                    runningCorpus += monthlyInterestGenerated;
+                }
+            }
+
+            // 2. Process Bulk Withdrawals at end of year index (sharing the same annual tax exemption cap logic)
+            let yearBulkWithdrawals = 0;
+            eventsForYear.filter(e => e.type === 'withdraw').forEach(e => {
+                if (runningCorpus <= 0) return;
+                
+                let actualDeduction = e.amount;
+                if (runningCorpus < actualDeduction) {
+                    actualDeduction = runningCorpus;
+                }
+
+                const gainRatio = runningCorpus > 0 ? Math.min(1, Math.max(0, cumulativeGainsPool / runningCorpus)) : 0;
+                const gainComponent = actualDeduction * gainRatio;
+                
+                let taxableGainAmount = 0;
+                if (yearlyGainsRealizedThisFY + gainComponent > annualExemptionLimit) {
+                    if (yearlyGainsRealizedThisFY < annualExemptionLimit) {
+                        taxableGainAmount = (yearlyGainsRealizedThisFY + gainComponent) - annualExemptionLimit;
+                    } else {
+                        taxableGainAmount = gainComponent;
+                    }
+                }
+
+                const currentTaxOutflux = taxableGainAmount * (standardLtcgTaxRate / 100);
+                yearGainsTaxed += currentTaxOutflux;
+
+                cumulativeGainsPool = Math.max(0, cumulativeGainsPool - gainComponent);
+                yearlyGainsRealizedThisFY += gainComponent;
+
+                const totalBulkDeduction = actualDeduction + currentTaxOutflux;
+                if (runningCorpus <= totalBulkDeduction) {
+                    yearBulkWithdrawals += runningCorpus; 
+                    runningCorpus = 0;
+                    isDepleted = true;
+                } else {
+                    runningCorpus -= totalBulkDeduction;
+                    yearBulkWithdrawals += actualDeduction;
+                }
+            });
+
+            if (runningCorpus <= 0 && !isDepleted) {
+                isDepleted = true;
+                runningCorpus = 0;
+            }
+
+            if (isDepleted && depletionYearIndex === null) {
+                depletionYearIndex = year;
+            }
+
+            globalExtractedWealth += (yearRegularSwpExtracted + yearBulkWithdrawals);
+            globalTaxesPaid += yearGainsTaxed;
+
+            const inflationCompoundingFactor = Math.pow(1 + (targetedInflation / 100), year);
+            const verifiedPresentValuePurchasingPower = runningCorpus / inflationCompoundingFactor;
+
+            timelineLabels.push(`Year ${year}`);
+            trackingWealthVector.push(Math.round(runningCorpus));
+            trackingExtractedVector.push(Math.round(globalExtractedWealth));
+            trackingInflationAdjustedVector.push(Math.round(verifiedPresentValuePurchasingPower));
+
+            let chipsHtml = '';
+            eventsForYear.forEach((evt, idx) => {
+                if (evt.type === 'infusion') {
+                    chipsHtml += `
+                        <span class="badge badge-infusion">
+                            📥 Infusion: +₹${new Intl.NumberFormat('en-IN').format(evt.amount)}
+                            <button class="chip-delete-btn" onclick="deleteStackedEventNode(${year}, ${idx})">&times;</button>
+                        </span>`;
+                } else {
+                    chipsHtml += `
+                        <span class="badge badge-withdrew">
+                            💸 Bulk Outflow: -₹${new Intl.NumberFormat('en-IN').format(evt.amount)}
+                            <button class="chip-delete-btn" onclick="deleteStackedEventNode(${year}, ${idx})">&times;</button>
+                        </span>`;
+                }
+            });
+
+            let balanceImpactDisplayString = '—';
+            if (yearTotalInfusions > 0 || yearBulkWithdrawals > 0) {
+                const diffNetValue = yearTotalInfusions - yearBulkWithdrawals;
+                const polarSign = diffNetValue >= 0 ? '+' : '';
+                const metricsColorHex = diffNetValue >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+                balanceImpactDisplayString = `<span style="color: ${metricsColorHex}; font-weight:600;">${polarSign}₹${new Intl.NumberFormat('en-IN').format(diffNetValue)}</span>`;
+            }
+
+            compiledLedgerHtml += `
+                <tr>
+                    <td><strong>Year ${year}</strong></td>
+                    <td style="font-variant-numeric: tabular-nums;">₹${new Intl.NumberFormat('en-IN').format(Math.round(openingYearlyBalance))}</td>
+                    <td style="font-variant-numeric: tabular-nums;">₹${new Intl.NumberFormat('en-IN').format(Math.round(yearRegularSwpExtracted))}</td>
+                    <td style="font-variant-numeric: tabular-nums;">${balanceImpactDisplayString}</td>
+                    <td style="font-weight:700; color:${runningCorpus > 0 ? 'var(--success-color)' : 'var(--danger-color)'}; font-variant-numeric: tabular-nums;">
+                        ₹${new Intl.NumberFormat('en-IN').format(Math.round(runningCorpus))}
+                    </td>
+                    <td>
+                        <div class="directives-cell-container">
+                            <div class="chips-stack">${chipsHtml}</div>
+                            <button type="button" class="btn-inline-add" onclick="openModifierModal(${year})">＋ Add Impact</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Render Shorthand Format (Cr / Lakh) for Analytical Overview Cards
+        document.getElementById('totalExtracted').innerText = formatIndianShorthand(globalExtractedWealth);
+        document.getElementById('totalTax').innerText = formatIndianShorthand(globalTaxesPaid);
+        document.getElementById('realValue').innerText = formatIndianShorthand(runningCorpus / Math.pow(1 + (targetedInflation / 100), totalHorizonYears));
+
+        const balanceDisplayNode = document.getElementById('terminalBalance');
+        if (isDepleted) {
+            balanceDisplayNode.innerText = `Exhausted (Yr ${depletionYearIndex})`;
+            balanceDisplayNode.style.color = 'var(--danger-color)';
+        } else {
+            balanceDisplayNode.innerText = formatIndianShorthand(runningCorpus);
+            balanceDisplayNode.style.color = 'var(--text-primary)';
+        }
+        
+        ledgerBody.innerHTML = compiledLedgerHtml;
+
+        renderLongevityLineChart(timelineLabels, trackingWealthVector, trackingExtractedVector, trackingInflationAdjustedVector);
+        renderDistributionPieChart(Math.round(runningCorpus), Math.round(globalExtractedWealth), Math.round(globalTaxesPaid));
+    }
+
+    function renderLongevityLineChart(labels, corpusVector, extractedVector, realValueVector) {
+        const isDark = htmlEl.getAttribute('data-theme') === 'dark';
+        const gridColor = isDark ? '#243249' : '#f1f5f9';
+        const textMuted = isDark ? '#cbd5e1' : '#475569';
+
+        if (lineChart) {
+            lineChart.data.labels = labels;
+            lineChart.data.datasets[0].data = corpusVector;
+            lineChart.data.datasets[1].data = extractedVector;
+            lineChart.data.datasets[2].data = realValueVector;
+            lineChart.options.scales.x.grid.color = gridColor;
+            lineChart.options.scales.y.grid.color = gridColor;
+            lineChart.options.scales.x.ticks.color = textMuted;
+            lineChart.options.scales.y.ticks.color = textMuted;
+            
+            const ctx = document.getElementById('longevityChart').getContext('2d');
+            const fillGrad = ctx.createLinearGradient(0, 0, 0, 260);
+            fillGrad.addColorStop(0, isDark ? 'rgba(99, 102, 241, 0.22)' : 'rgba(79, 70, 229, 0.12)');
+            fillGrad.addColorStop(1, 'rgba(79, 70, 229, 0)');
+            lineChart.data.datasets[0].backgroundColor = fillGrad;
+
+            lineChart.update();
+            return;
+        }
+
+        const ctx = document.getElementById('longevityChart').getContext('2d');
+        const fillGrad = ctx.createLinearGradient(0, 0, 0, 260);
+        fillGrad.addColorStop(0, isDark ? 'rgba(99, 102, 241, 0.22)' : 'rgba(79, 70, 229, 0.12)');
+        fillGrad.addColorStop(1, 'rgba(79, 70, 229, 0)');
+
+        lineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Remaining Corpus',
+                        data: corpusVector,
+                        borderColor: isDark ? '#6366f1' : '#4f46e5',
+                        backgroundColor: fillGrad,
+                        fill: true,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        tension: 0.15
+                    },
+                    {
+                        label: 'Cumulative Extracted',
+                        data: extractedVector,
+                        borderColor: '#94a3b8',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [5, 4],
+                        pointRadius: 0,
+                        tension: 0.15
+                    },
+                    {
+                        label: 'Real Value (Inflation Adj.)',
+                        data: realValueVector,
+                        borderColor: '#16a34a',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.15
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 8, padding: 10, font: { size: 10, weight: 600 }, color: textMuted }
+                    },
+                    tooltip: {
+                        padding: 10,
+                        borderRadius: 8,
+                        backgroundColor: isDark ? '#1e293b' : '#0f172a',
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.dataset.label + ': ₹' + new Intl.NumberFormat('en-IN').format(context.raw);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: textMuted, font: { size: 10 } } },
+                    y: { grid: { color: gridColor }, ticks: { color: textMuted, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    function renderDistributionPieChart(remaining, extracted, taxes) {
+        const isDark = htmlEl.getAttribute('data-theme') === 'dark';
+        const textMuted = isDark ? '#cbd5e1' : '#475569';
+
+        const paletteColors = isDark 
+            ? ['#4ade80', '#6366f1', '#f87171'] 
+            : ['#16a34a', '#4f46e5', '#dc2626'];
+
+        if (pieChart) {
+            pieChart.data.datasets[0].data = [remaining, extracted, taxes];
+            pieChart.data.datasets[0].backgroundColor = paletteColors;
+            pieChart.options.plugins.legend.labels.color = textMuted;
+            pieChart.update();
+            return;
+        }
+
+        const ctx = document.getElementById('distributionChart').getContext('2d');
+        pieChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Remaining Balance', 'Total Payouts', 'LTCG Tax Siphoned'],
+                datasets: [{
+                    data: [remaining, extracted, taxes],
+                    backgroundColor: paletteColors,
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 10, padding: 8, font: { size: 10, weight: 600 }, color: textMuted }
+                    },
+                    tooltip: {
+                        padding: 10,
+                        borderRadius: 8,
+                        backgroundColor: isDark ? '#1e293b' : '#0f172a',
+                        callbacks: {
+                            label: function(context) {
+                                const sumVal = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentageValue = sumVal > 0 ? ((context.raw / sumVal) * 100).toFixed(1) : 0;
+                                return ' ' + context.label + ': ₹' + new Intl.NumberFormat('en-IN').format(context.raw) + ' (' + percentageValue + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function rebuildChartEngines() {
+        if (lineChart) { lineChart.destroy(); lineChart = null; }
+        if (pieChart) { pieChart.destroy(); pieChart = null; }
+        executeCalculationPipeline();
+    }
+
+    swpForm.addEventListener('input', () => {
+        cacheStateData();
+        executeCalculationPipeline();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        rehydrateCachedState();
+        initTheme();
+        executeCalculationPipeline();
+    });
+</script>
+</body>
+</html>
