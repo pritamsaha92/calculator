@@ -6,6 +6,8 @@
     <title>Home Loan Strategy Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="global.js" defer></script>
     <style>
         :root {
             --bg-base: #f8fafc;
@@ -355,7 +357,7 @@
             header { flex-direction: column; align-items: stretch; text-align: center; }
             .header-actions { justify-content: center; width: 100%; }
             .header-actions .btn { flex: 1; min-width: 120px; }
-            .card { padding: 1rem; border-radius: 8px; }
+            .card { padding: 1rem; border-radius: 8px; margin-bottom: 2rem; }
             .milestone-strip { flex-direction: column; gap: 0.5rem; }
             .table-section h2 { font-size: 1.1rem; }
             table { font-size: 0.8rem; }
@@ -363,6 +365,7 @@
             .lumpsum-input-container { flex-direction: column; align-items: stretch; gap: 0.25rem; }
             .inline-lumpsum-input { width: 100%; }
             .btn-add-lumpsum { width: 100%; height: 32px; }
+            .main-dashboard-grid{display: block;}
         }
 
         @media (max-width: 48px) {
@@ -653,6 +656,7 @@
         </div>
     </div>
 </div>
+<footer class="site-footer"></footer>
 
 <script>
     Chart.register(ChartDataLabels);

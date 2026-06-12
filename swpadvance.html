@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advance SWP Calculator (Tax Optimized)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="global.js" defer></script>
     <style>
         :root {
             --bg-app: #f8fafc;
@@ -74,11 +76,15 @@
         .metric-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow-lg); }
         .metric-val { font-size: 1.4rem; font-weight: 800; margin-top: 0.4rem; letter-spacing: -0.02em; }
 
-        .charts-workspace { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.5rem; height: 320px; width: 100%; }
+        .charts-workspace { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.5rem; height: 455px; width: 100%; }
         
         @media (max-width: 768px) {
-            .charts-workspace { grid-template-columns: 1fr; height: auto; }
-            .chart-panel-box { height: 260px !important; }
+            body { padding: 1rem; }
+            .page-wrapper { gap : 0 !important; }
+            .top-split { display: block; }
+            .card-panel { margin-bottom: 1.5rem; }
+            .charts-workspace { display: block; height: auto; }
+            .chart-panel-box { height: 260px !important; margin-bottom: 1.5rem;}
         }
 
         .chart-panel-box { background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow-lg); position: relative; height: 100%; display: flex; flex-direction: column; }
@@ -276,7 +282,7 @@
         </div>
     </div>
 </div>
-
+<footer class="site-footer"></footer>
 <script>
     const htmlEl = document.documentElement;
     const themeToggleBtn = document.getElementById('themeToggleBtn');

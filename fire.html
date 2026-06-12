@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="global.css">
+<script src="global.js" defer></script>
 <style>
 :root {
   --primary:#4f46e5; --primary-hover:#4338ca;
@@ -22,9 +24,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-main);color:va
 .fire-container{background:var(--surface);max-width:1440px;width:100%;border-radius:24px;box-shadow:0 20px 25px -5px rgba(0,0,0,.05);border:1px solid rgba(255,255,255,.5);display:grid;grid-template-columns:1.15fr 0.85fr;}
 .input-panel{padding:40px;border-right:1px solid #e2e8f0;max-height:96vh;overflow-y:auto;}
 .output-panel{padding:40px;background:#f8fafc;display:flex;flex-direction:column;max-height:96vh;overflow-y:auto;border-top-right-radius:24px;border-bottom-right-radius:24px;}
-header{margin-bottom:28px;}
+header{margin-bottom:10px;}
 h1{font-size:1.6rem;font-weight:700;color:#0f172a;}
-.subtitle{color:var(--text-muted);font-size:.9rem;margin-top:4px;}
+.subtitle{color:var(--text-muted);font-size:.9rem;margin-top:8px;}
 .section-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:24px;}
 .section-title{font-size:1.05rem;font-weight:600;margin-bottom:18px;color:#0f172a;display:flex;justify-content:space-between;align-items:center;}
 .grid-inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
@@ -107,217 +109,221 @@ input[readonly]{background:#f8fafc;color:#475569;cursor:not-allowed;border-color
 @media(max-width:900px){
   body{padding:0;}
   .fire-container{grid-template-columns:1fr!important;border-radius:0;min-height:100vh;}
-  .input-panel,.output-panel{padding:24px;max-height:none;overflow-y:visible;border-right:none;border-radius:0;}
+  .input-panel,.output-panel{padding:1rem;max-height:none;overflow-y:visible;border-right:none;border-radius:0;}
   .grid-inputs,.asset-row-grid,.purchase-mode-row,.emi-fields,.proj-summary{grid-template-columns:1fr;}
   .table-header{display:none;}
   .dynamic-row{grid-template-columns:1fr;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;position:relative;}
   .delete-btn{position:absolute;top:8px;right:8px;}
 }
+
+@media only screen and (max-width: 767px) {
+  .fire-container {display: block;}
+  .dynamic-row {padding: 1.8em;}
+}
 </style>
 </head>
-<body>
+<body>    
 <main class="fire-container">
+    <!-- ═══ INPUT PANEL ═══════════════════════════════════════════════════ -->
+    <section class="input-panel">
+    <header>
+        <h1>🔥 FIRE Discovery Engine</h1>
+        <p class="subtitle">Extract financial autonomy metrics with separated portfolio engines and income hard-stops.</p>
+    </header>
 
-<!-- ═══ INPUT PANEL ═══════════════════════════════════════════════════ -->
-<section class="input-panel">
-  <header>
-    <h1>🔥 Holistic FIRE Discovery Engine</h1>
-    <p class="subtitle">Extract financial autonomy metrics with separated portfolio engines and income hard-stops.</p>
-  </header>
-
-  <!-- Inflows & Horizons -->
-  <div class="section-card">
-    <div class="section-title">Inflows &amp; Horizons</div>
-    <div class="grid-inputs">
-      <div class="form-group"><label for="monthlyIncome">Current Monthly Net Income (₹)</label><input type="number" id="monthlyIncome" value="150000"></div>
-      <div class="form-group"><label for="incomeIncrement">Expected Annual Salary Hike (%)</label><input type="number" id="incomeIncrement" value="8" step="0.5"></div>
-      <div class="form-group"><label for="inflation">Assumed General Inflation Rate (%)</label><input type="number" id="inflation" value="6" step="0.1"></div>
-      <div class="form-group"><label for="taxRate">Post-FIRE Asset Tax Drag (%)</label><input type="number" id="taxRate" value="15" step="0.5"></div>
-      <div class="form-group"><label for="currentAge">Current Age</label><input type="number" id="currentAge" value="30"></div>
-      <div class="form-group"><label for="lifeExpectancy">Life Expectancy Age</label><input type="number" id="lifeExpectancy" value="85"></div>
-    </div>
-  </div>
-
-  <!-- Outflows -->
-  <div class="section-card">
-    <div class="section-title">
-      <span>Monthly Outflows &amp; Commitments</span>
-      <button class="collapsible-trigger" onclick="toggleSection('expenseCollapsible')">✏️ Itemize Segments</button>
-    </div>
-    <div class="form-group"><label for="masterExpense">Aggregated Monthly Expenses (₹)</label><input type="number" id="masterExpense" value="60000"></div>
-    <div id="expenseCollapsible" class="collapsible-content">
-      <div class="grid-inputs" style="margin-top:10px;">
-        <div class="form-group"><label>Rent (₹/mo)</label><input type="number" id="rentInput" value="0" class="itemized-exp" oninput="calculateFire()"></div>
-        <div class="form-group"><label>Bills &amp; Utilities (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
-        <div class="form-group"><label>Food &amp; Groceries (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
-        <div class="form-group"><label>Transport &amp; Fuel (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
-        <div class="form-group"><label>Car EMI &amp; Upkeep (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
-        <div class="form-group"><label>Maid &amp; Support (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Investment Strategy -->
-  <div class="section-card">
-    <div class="section-title">Investment Strategy (Fresh Cash Flow)</div>
-    <div class="grid-inputs">
-      <div class="form-group"><label for="investmentOverride">Computed Monthly Investable (₹)</label><input type="number" id="investmentOverride" value="90000" readonly></div>
-      <div class="form-group"><label for="cashBufferPct">Emergency/Savings Buffer (%)</label><input type="number" id="cashBufferPct" value="10" min="0" max="90"></div>
-      <div class="form-group"><label for="workingRoi">Pre-FIRE Investment ROI (%)</label><input type="number" id="workingRoi" value="12" step="0.5"></div>
-      <div class="form-group"><label for="postFireRoi">Post-FIRE Portfolio ROI (%)</label><input type="number" id="postFireRoi" value="8" step="0.5"></div>
-    </div>
-  </div>
-
-  <!-- Existing Assets -->
-  <div class="section-card">
-    <div class="section-title">
-      <span>Existing Asset Portfolio</span>
-      <button class="collapsible-trigger" onclick="toggleSection('portfolioCollapsible')">🏦 Itemized Assets</button>
-    </div>
-    <div class="grid-inputs">
-      <div class="form-group"><label>Total Existing Wealth (₹)</label><input type="number" id="masterAssets" value="0" readonly></div>
-      <div class="form-group"><label>Blended CAGR (%)</label><input type="text" id="blendedAssetRoi" value="0.0%" readonly></div>
-    </div>
-    <div id="portfolioCollapsible" class="collapsible-content">
-      <div style="display:grid;grid-template-columns:1.2fr 1fr 0.8fr;gap:12px;margin-bottom:8px;opacity:.7;">
-        <span style="font-size:.75rem;font-weight:600;">Asset Segment</span>
-        <span style="font-size:.75rem;font-weight:600;">Current Balance (₹)</span>
-        <span style="font-size:.75rem;font-weight:600;">Expected ROI (%)</span>
-      </div>
-      <div class="asset-row-grid"><div class="asset-row-title">Debt Instruments</div><input type="number" value="500000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="6" class="itemized-asset-roi" oninput="calculateFire()"></div>
-      <div class="asset-row-grid"><div class="asset-row-title">Direct Equity</div><input type="number" value="1000000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="13" class="itemized-asset-roi" oninput="calculateFire()"></div>
-      <div class="asset-row-grid"><div class="asset-row-title">Mutual Funds (MF)</div><input type="number" value="500000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="12" class="itemized-asset-roi" oninput="calculateFire()"></div>
-      <div class="asset-row-grid"><div class="asset-row-title">EPF Balances</div><input type="number" value="300000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="7.1" class="itemized-asset-roi" oninput="calculateFire()"></div>
-      <div class="asset-row-grid"><div class="asset-row-title">NPS Holdings</div><input type="number" value="100000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="9.5" class="itemized-asset-roi" oninput="calculateFire()"></div>
-      <div class="asset-row-grid"><div class="asset-row-title">Gold / Commodities</div><input type="number" value="100000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="8" class="itemized-asset-roi" oninput="calculateFire()"></div>
-    </div>
-  </div>
-
-  <!-- Home Ownership Guardrail -->
-  <div class="section-card">
-    <div class="section-title">Home Ownership Guardrail</div>
-    <div class="form-group checkbox-group">
-      <input type="checkbox" id="ownsPaternalHouse" checked onchange="toggleHousingPanel()">
-      <label style="cursor:pointer;" for="ownsPaternalHouse">🏠 Already owns house (no purchase needed)</label>
-    </div>
-    <div id="housingConditionalPanel" class="conditional-housing-panel">
-      <div class="purchase-mode-row">
-        <div class="form-group"><label for="propertyCost">Property Purchase Cost (₹)</label><input type="number" id="propertyCost" value="6000000" oninput="updateEmiCalc()"></div>
-        <div class="form-group"><label for="propertyAge">Target Age to Purchase</label><input type="number" id="propertyAge" value="38" oninput="updateEmiCalc()"></div>
-      </div>
-      <div class="form-group">
-        <label for="purchaseMode">Purchase Mode</label>
-        <select id="purchaseMode" onchange="onPurchaseModeChange()">
-          <option value="lumpsum">💰 Full Lump-Sum Purchase</option>
-          <option value="emi">🏦 Down Payment + Home Loan EMI</option>
-        </select>
-      </div>
-      <div class="emi-fields" id="emiFieldsPanel">
-        <div class="form-group"><label for="downPaymentPct">Down Payment (%)</label><input type="number" id="downPaymentPct" value="20" min="5" max="80" oninput="updateEmiCalc()"></div>
-        <div class="form-group"><label for="homeLoanRate">Home Loan Interest Rate (%)</label><input type="number" id="homeLoanRate" value="8.5" step="0.1" oninput="updateEmiCalc()"></div>
-        <div class="form-group"><label for="loanTenureYears">Loan Tenure (Years)</label><input type="number" id="loanTenureYears" value="20" min="1" max="30" oninput="updateEmiCalc()"></div>
-        <div class="form-group"><label>Monthly EMI (₹) <span class="purchase-mode-badge">Auto</span></label><input type="number" id="computedEmi" readonly></div>
-        <div class="form-group"><label>Down Payment Amount (₹) <span class="purchase-mode-badge">Auto</span></label><input type="number" id="computedDownPayment" readonly></div>
-        <div class="form-group"><label>EMI End Age <span class="purchase-mode-badge">Auto</span></label><input type="number" id="emiEndAge" readonly></div>
-      </div>
-      <div class="info-badge" id="housingInfoBadge">🏠 Full purchase cost debited from portfolio at target age (inflation-adjusted).</div>
-    </div>
-  </div>
-
-  <!-- Milestones -->
-  <div class="section-card">
-    <div class="section-title">Ad-Hoc Capital Milestones (One-Time Outflows)</div>
-    <div class="table-header">
-      <span>Milestone Goal</span><span>Cost (Today's ₹)</span><span>Target Age</span><span></span>
-    </div>
-    <div id="milestoneContainer"></div>
-    <button class="add-btn" onclick="addMilestoneRow('','','')">➕ Add One-Time Capital Outflow Goal</button>
-  </div>
-</section>
-
-<!-- ═══ OUTPUT PANEL ══════════════════════════════════════════════════ -->
-<section class="output-panel">
-  <div class="kpi-block">
-    <div class="kpi-split">
-      <div><div class="kpi-label">Earliest FIRE Age</div><div class="kpi-value highlight" id="outFireAge">--</div></div>
-      <div><div class="kpi-label">FIRE Corpus Required</div><div class="kpi-value" id="outFireCorpus">₹0</div></div>
-    </div>
-    <div class="kpi-status error" id="fireStatusMessage">Analyzing trajectory cash models...</div>
-  </div>
-
-  <div class="metrics-subgrid">
-    <div class="sub-metric"><div class="sub-metric-label">Monthly Savings Invested (Today)</div><div class="sub-metric-val" id="outRealInvestment">₹0</div></div>
-    <div class="sub-metric"><div class="sub-metric-label">Income Surplus (Buffer Margin)</div><div class="sub-metric-val" id="outBufferMargin">₹0</div></div>
-  </div>
-
-  <!-- Projection Table (collapsible) -->
-  <div class="proj-frame">
-    <div class="section-title" style="margin-bottom:4px;">💹 Year-by-Year Money Projection</div>
-    <div class="sub-metric-label" style="margin-bottom:14px;">Summary of savings growth; expand for full inflation-adjusted table to age <span id="projLifeAge">85</span>.</div>
-
-    <!-- Summary always-visible cards -->
-    <div class="proj-summary" id="projSummaryCards">
-      <div class="proj-summary-card">
-        <div class="proj-summary-label">Monthly Investment Today</div>
-        <div class="proj-summary-val" id="ps1Val">—</div>
-        <div class="proj-summary-sub" id="ps1Sub">At current income &amp; buffer</div>
-      </div>
-      <div class="proj-summary-card">
-        <div class="proj-summary-label">Monthly Investment at FIRE Age</div>
-        <div class="proj-summary-val" id="ps2Val">—</div>
-        <div class="proj-summary-sub" id="ps2Sub">After salary hike compounding</div>
-      </div>
-      <div class="proj-summary-card">
-        <div class="proj-summary-label">Total Portfolio at FIRE Age</div>
-        <div class="proj-summary-val" id="ps3Val">—</div>
-        <div class="proj-summary-sub" id="ps3Sub">Existing assets + fresh investments</div>
-      </div>
-      <div class="proj-summary-card">
-        <div class="proj-summary-label">Inflation-Adjusted Expense (FIRE Year)</div>
-        <div class="proj-summary-val" id="ps4Val">—</div>
-        <div class="proj-summary-sub" id="ps4Sub">Monthly expense at retirement</div>
-      </div>
+    <!-- Inflows & Horizons -->
+    <div class="section-card">
+        <div class="section-title">Monthly Inflows</div>
+        <div class="grid-inputs">
+        <div class="form-group"><label for="monthlyIncome">Current Monthly Net Income (₹)</label><input type="number" id="monthlyIncome" value="150000"></div>
+        <div class="form-group"><label for="incomeIncrement">Expected Annual Salary Hike (%)</label><input type="number" id="incomeIncrement" value="8" step="0.5"></div>
+        <div class="form-group"><label for="inflation">Assumed General Inflation Rate (%)</label><input type="number" id="inflation" value="6" step="0.1"></div>
+        <div class="form-group"><label for="taxRate">Post-FIRE Asset Tax Drag (%)</label><input type="number" id="taxRate" value="15" step="0.5"></div>
+        <div class="form-group"><label for="currentAge">Current Age</label><input type="number" id="currentAge" value="30"></div>
+        <div class="form-group"><label for="lifeExpectancy">Life Expectancy Age</label><input type="number" id="lifeExpectancy" value="85"></div>
+        </div>
     </div>
 
-    <button class="proj-expand-btn" id="projExpandBtn" onclick="toggleProjectionTable()">
-      <span id="projExpandIcon">▼</span> Show Year-by-Year Breakdown
-    </button>
-
-    <div class="proj-table-wrap" id="projTableWrap">
-      <table class="proj-table" id="projTable">
-        <thead>
-          <tr>
-            <th style="text-align:left;">Age</th>
-            <th>Monthly Income</th>
-            <th>Monthly Investment</th>
-            <th>Fresh Pool</th>
-            <th>Existing Portfolio</th>
-            <th>Total Wealth</th>
-            <th>Infl. Adj. Expense/mo</th>
-            <th>Phase</th>
-          </tr>
-        </thead>
-        <tbody id="projTableBody"></tbody>
-      </table>
+    <!-- Outflows -->
+    <div class="section-card">
+        <div class="section-title">
+        <span>Monthly Outflows</span>
+        <button class="collapsible-trigger" onclick="toggleSection('expenseCollapsible')">✏️ Itemized Spent</button>
+        </div>
+        <div class="form-group"><label for="masterExpense">Aggregated Monthly Expenses (₹)</label><input type="number" id="masterExpense" value="60000"></div>
+        <div id="expenseCollapsible" class="collapsible-content">
+        <div class="grid-inputs" style="margin-top:10px;">
+            <div class="form-group"><label>Rent (₹/mo)</label><input type="number" id="rentInput" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+            <div class="form-group"><label>Bills &amp; Utilities (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+            <div class="form-group"><label>Food &amp; Groceries (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+            <div class="form-group"><label>Transport &amp; Fuel (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+            <div class="form-group"><label>Car EMI &amp; Upkeep (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+            <div class="form-group"><label>Maid &amp; Support (₹)</label><input type="number" value="0" class="itemized-exp" oninput="calculateFire()"></div>
+        </div>
+        </div>
     </div>
-  </div>
 
-  <!-- Wealth Chart -->
-  <div class="chart-frame">
-    <div class="section-title" style="margin-bottom:4px;">Wealth Compound Vector</div>
-    <div class="sub-metric-label" style="margin-bottom:12px;">Net worth through accumulation and withdrawal phases.</div>
-    <div class="chart-bars" id="chartBars"></div>
-  </div>
+    <!-- Investment Strategy -->
+    <div class="section-card">
+        <div class="section-title">Monthly Investment</div>
+        <div class="grid-inputs">
+        <div class="form-group"><label for="investmentOverride">Computed Monthly Investable (₹)</label><input type="number" id="investmentOverride" value="90000" readonly></div>
+        <div class="form-group"><label for="cashBufferPct">Emergency/Savings Buffer (%)</label><input type="number" id="cashBufferPct" value="10" min="0" max="90"></div>
+        <div class="form-group"><label for="workingRoi">Pre-FIRE Investment ROI (%)</label><input type="number" id="workingRoi" value="12" step="0.5"></div>
+        <div class="form-group"><label for="postFireRoi">Post-FIRE Portfolio ROI (%)</label><input type="number" id="postFireRoi" value="8" step="0.5"></div>
+        </div>
+    </div>
 
-  <!-- Cash-flow Chart -->
-  <div class="chart-frame">
-    <div class="section-title" style="margin-bottom:4px;">Annual Cash Inflows vs Outflows</div>
-    <div class="sub-metric-label" style="margin-bottom:12px;">Income <span style="color:#6366f1;font-weight:600">■</span> stops at FIRE vs inflated expenses <span style="color:#f43f5e;font-weight:600">■</span>.</div>
-    <div class="chart-bars" id="chartFlowBars"></div>
-  </div>
-</section>
+    <!-- Existing Assets -->
+    <div class="section-card">
+        <div class="section-title">
+        <span>Existing Asset Portfolio</span>
+        <button class="collapsible-trigger" onclick="toggleSection('portfolioCollapsible')">🏦 Itemized Details</button>
+        </div>
+        <div class="grid-inputs">
+        <div class="form-group"><label>Total Existing Wealth (₹)</label><input type="number" id="masterAssets" value="0" readonly></div>
+        <div class="form-group"><label>Blended CAGR (%)</label><input type="text" id="blendedAssetRoi" value="0.0%" readonly></div>
+        </div>
+        <div id="portfolioCollapsible" class="collapsible-content">
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 0.8fr;gap:12px;margin-bottom:8px;opacity:.7;">
+            <span style="font-size:.75rem;font-weight:600;">Asset Segment</span>
+            <span style="font-size:.75rem;font-weight:600;">Current Balance (₹)</span>
+            <span style="font-size:.75rem;font-weight:600;">Expected ROI (%)</span>
+        </div>
+        <div class="asset-row-grid"><div class="asset-row-title">Debt Instruments</div><input type="number" value="500000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="6" class="itemized-asset-roi" oninput="calculateFire()"></div>
+        <div class="asset-row-grid"><div class="asset-row-title">Direct Equity</div><input type="number" value="1000000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="13" class="itemized-asset-roi" oninput="calculateFire()"></div>
+        <div class="asset-row-grid"><div class="asset-row-title">Mutual Funds (MF)</div><input type="number" value="500000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="12" class="itemized-asset-roi" oninput="calculateFire()"></div>
+        <div class="asset-row-grid"><div class="asset-row-title">EPF Balances</div><input type="number" value="300000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="7.1" class="itemized-asset-roi" oninput="calculateFire()"></div>
+        <div class="asset-row-grid"><div class="asset-row-title">NPS Holdings</div><input type="number" value="100000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="9.5" class="itemized-asset-roi" oninput="calculateFire()"></div>
+        <div class="asset-row-grid"><div class="asset-row-title">Gold / Commodities</div><input type="number" value="100000" class="itemized-asset" oninput="calculateFire()"><input type="number" value="8" class="itemized-asset-roi" oninput="calculateFire()"></div>
+        </div>
+    </div>
+
+    <!-- Home Ownership Guardrail -->
+    <div class="section-card">
+        <div class="section-title">Home Ownership Details</div>
+        <div class="form-group checkbox-group">
+        <input type="checkbox" id="ownsPaternalHouse" checked onchange="toggleHousingPanel()">
+        <label style="cursor:pointer;" for="ownsPaternalHouse">🏠 Already owns house (no purchase needed)</label>
+        </div>
+        <div id="housingConditionalPanel" class="conditional-housing-panel">
+        <div class="purchase-mode-row">
+            <div class="form-group"><label for="propertyCost">Property Purchase Cost (₹)</label><input type="number" id="propertyCost" value="6000000" oninput="updateEmiCalc()"></div>
+            <div class="form-group"><label for="propertyAge">Target Age to Purchase</label><input type="number" id="propertyAge" value="38" oninput="updateEmiCalc()"></div>
+        </div>
+        <div class="form-group">
+            <label for="purchaseMode">Purchase Mode</label>
+            <select id="purchaseMode" onchange="onPurchaseModeChange()">
+            <option value="lumpsum">💰 Full Lump-Sum Purchase</option>
+            <option value="emi">🏦 Down Payment + Home Loan EMI</option>
+            </select>
+        </div>
+        <div class="emi-fields" id="emiFieldsPanel">
+            <div class="form-group"><label for="downPaymentPct">Down Payment (%)</label><input type="number" id="downPaymentPct" value="20" min="5" max="80" oninput="updateEmiCalc()"></div>
+            <div class="form-group"><label for="homeLoanRate">Home Loan Interest Rate (%)</label><input type="number" id="homeLoanRate" value="8.5" step="0.1" oninput="updateEmiCalc()"></div>
+            <div class="form-group"><label for="loanTenureYears">Loan Tenure (Years)</label><input type="number" id="loanTenureYears" value="20" min="1" max="30" oninput="updateEmiCalc()"></div>
+            <div class="form-group"><label>Monthly EMI (₹) <span class="purchase-mode-badge">Auto</span></label><input type="number" id="computedEmi" readonly></div>
+            <div class="form-group"><label>Down Payment Amount (₹) <span class="purchase-mode-badge">Auto</span></label><input type="number" id="computedDownPayment" readonly></div>
+            <div class="form-group"><label>EMI End Age <span class="purchase-mode-badge">Auto</span></label><input type="number" id="emiEndAge" readonly></div>
+        </div>
+        <div class="info-badge" id="housingInfoBadge">🏠 Full purchase cost debited from portfolio at target age (inflation-adjusted).</div>
+        </div>
+    </div>
+
+    <!-- Milestones -->
+    <div class="section-card">
+        <div class="section-title">Ad-Hoc Capital Milestones</div>
+        <div class="table-header">
+        <span>Milestone Goal</span><span>Cost (Today's ₹)</span><span>Target Age</span><span></span>
+        </div>
+        <div id="milestoneContainer"></div>
+        <button class="add-btn" onclick="addMilestoneRow('','','')">➕ Add More Capital Outflow Goal</button>
+    </div>
+    </section>
+
+    <!-- ═══ OUTPUT PANEL ══════════════════════════════════════════════════ -->
+    <section class="output-panel">
+    <div class="kpi-block">
+        <div class="kpi-split">
+        <div><div class="kpi-label">Earliest FIRE Age</div><div class="kpi-value highlight" id="outFireAge">--</div></div>
+        <div><div class="kpi-label">FIRE Corpus Required</div><div class="kpi-value" id="outFireCorpus">₹0</div></div>
+        </div>
+        <div class="kpi-status error" id="fireStatusMessage">Analyzing trajectory cash models...</div>
+    </div>
+
+    <div class="metrics-subgrid">
+        <div class="sub-metric"><div class="sub-metric-label">Monthly Savings Invested (Today)</div><div class="sub-metric-val" id="outRealInvestment">₹0</div></div>
+        <div class="sub-metric"><div class="sub-metric-label">Income Surplus (Buffer Margin)</div><div class="sub-metric-val" id="outBufferMargin">₹0</div></div>
+    </div>
+
+    <!-- Projection Table (collapsible) -->
+    <div class="proj-frame">
+        <div class="section-title" style="margin-bottom:4px;">💹 Year-by-Year Money Projection</div>
+        <div class="sub-metric-label" style="margin-bottom:14px;">Summary of savings growth; expand for full inflation-adjusted table to age <span id="projLifeAge">85</span>.</div>
+
+        <!-- Summary always-visible cards -->
+        <div class="proj-summary" id="projSummaryCards">
+        <div class="proj-summary-card">
+            <div class="proj-summary-label">Monthly Investment Today</div>
+            <div class="proj-summary-val" id="ps1Val">—</div>
+            <div class="proj-summary-sub" id="ps1Sub">At current income &amp; buffer</div>
+        </div>
+        <div class="proj-summary-card">
+            <div class="proj-summary-label">Monthly Investment at FIRE Age</div>
+            <div class="proj-summary-val" id="ps2Val">—</div>
+            <div class="proj-summary-sub" id="ps2Sub">After salary hike compounding</div>
+        </div>
+        <div class="proj-summary-card">
+            <div class="proj-summary-label">Total Portfolio at FIRE Age</div>
+            <div class="proj-summary-val" id="ps3Val">—</div>
+            <div class="proj-summary-sub" id="ps3Sub">Existing assets + fresh investments</div>
+        </div>
+        <div class="proj-summary-card">
+            <div class="proj-summary-label">Inflation-Adjusted Expense (FIRE Year)</div>
+            <div class="proj-summary-val" id="ps4Val">—</div>
+            <div class="proj-summary-sub" id="ps4Sub">Monthly expense at retirement</div>
+        </div>
+        </div>
+
+        <button class="proj-expand-btn" id="projExpandBtn" onclick="toggleProjectionTable()">
+        <span id="projExpandIcon">▼</span> Show Year-by-Year Breakdown
+        </button>
+
+        <div class="proj-table-wrap" id="projTableWrap">
+        <table class="proj-table" id="projTable">
+            <thead>
+            <tr>
+                <th style="text-align:left;">Age</th>
+                <th>Monthly Income</th>
+                <th>Monthly Investment</th>
+                <th>Fresh Pool</th>
+                <th>Existing Portfolio</th>
+                <th>Total Wealth</th>
+                <th>Infl. Adj. Expense/mo</th>
+                <th>Phase</th>
+            </tr>
+            </thead>
+            <tbody id="projTableBody"></tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- Wealth Chart -->
+    <div class="chart-frame">
+        <div class="section-title" style="margin-bottom:4px;">Wealth Compound Vector</div>
+        <div class="sub-metric-label" style="margin-bottom:12px;">Net worth through accumulation and withdrawal phases.</div>
+        <div class="chart-bars" id="chartBars"></div>
+    </div>
+
+    <!-- Cash-flow Chart -->
+    <div class="chart-frame">
+        <div class="section-title" style="margin-bottom:4px;">Annual Cash Inflows vs Outflows</div>
+        <div class="sub-metric-label" style="margin-bottom:12px;">Income <span style="color:#6366f1;font-weight:600">■</span> stops at FIRE vs inflated expenses <span style="color:#f43f5e;font-weight:600">■</span>.</div>
+        <div class="chart-bars" id="chartFlowBars"></div>
+    </div>
+    </section>
 </main>
-
+<footer class="site-footer"></footer>
 <script>
 // ────────────────────────────────────────────────────────────────────
 // UTILITY

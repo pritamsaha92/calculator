@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Indian Child Growth & Milestone Co-Pilot</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.js"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="global.js" defer></script>
     <style>
         :root {
             --bg-base: #f1f5f9;
@@ -57,6 +59,9 @@
         .spinner { width: 45px; height: 45px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; margin-bottom: 0.5rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        @media only screen and (max-width: 767px) {
+            body { padding: 1rem;}
+        }
         .container { 
             max-width: 1440px; 
             margin: 0 auto; 
@@ -198,11 +203,8 @@
 
         .chart-frame-wrapper { height: 250px; position: relative; width: 100%; margin-top: 0.25rem; }
 
-        .milestone-track { 
-            display: flex; gap: 1rem; overflow-x: auto; padding: 0.25rem 0 0.75rem 0; 
-            scroll-behavior: smooth; width: 100%;
-            -webkit-overflow-scrolling: touch;
-        }
+        .milestone-track { display: flex; gap: 1rem; overflow-x: auto; padding: 0.25rem 0 0.75rem 0; scroll-behavior: smooth; width: 100%; -webkit-overflow-scrolling: touch; }
+        .milestone-icon {font-size: 1.5rem; display: inline-block; vertical-align: middle; margin-left: 0.5rem; }
         .milestone-card { flex: 0 0 280px; background: #f8fafc; border-radius: 10px; padding: 1rem; border: 2px solid transparent; transition: all 0.2s ease; }
         .milestone-card.active { background: var(--bg-surface); border-color: var(--primary); box-shadow: var(--shadow); }
         .milestone-age { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--primary); background: var(--primary-light); padding: 0.15rem 0.5rem; border-radius: 4px; display: inline-block; }
@@ -363,8 +365,10 @@
     </div>
 </div>
 
+<footer class="site-footer"></footer>
+
 <script>
-    // Complete, linguistically accurate translation dictionary matrix
+    // Complete, linguistically accurate translation dictionary matrix including milestones
     const i18nDictionary = {
         en: {
             loaderTitle: "IAP Child Growth Tracker", loaderSubtitle: "Mapping reference vectors safely...",
@@ -375,7 +379,23 @@
             cardAge: "Calculated Age", cardHeight: "Standardized Height", cardWeight: "Standardized Weight", cardBmi: "Body Mass Index (BMI)",
             analyticsHeight: "Height Analytics", analyticsWeight: "Weight Analytics", lblPercentile: "Percentile",
             lblVerdict: "Clinical Assessment Verdict", lblAdvisory: "⚠️ Pediatric Advisory Protocol",
-            milestonesTitle: "Active IAP Structural Milestones Timeline Tracking", milestonesSubtitle: "The child's structural chronological milestone window is automatically prioritized and highlighted below."
+            milestonesTitle: "Active IAP Structural Milestones Timeline Tracking", milestonesSubtitle: "The child's structural chronological milestone window is automatically prioritized and highlighted below.",
+            milestones: [
+                { label: "0-2 Mos", title: "Newborn Reflexive Phase", items: ["Focuses on faces briefly", "Startles at sharp environmental sounds", "Lifts head slightly when prone"] },
+                { label: "2-4 Mos", title: "Social Smiling Phase", items: ["Tracks moving items visually", "Coos and produces vowel sounds", "Holds head steady up independently"] },
+                { label: "4-6 Mos", title: "Hand-Eye Coordination", items: ["Rolls over from front to back", "Reaches eagerly for objects & rattles", "Babbles double consonant sounds"] },
+                { label: "6-9 Mos", title: "Structural Sitting Mark", items: ["Sits securely without back cushions", "Transfers objects from hand to hand", "Responds to spoken native name string"] },
+                { label: "9-12 Mos", title: "Locomotion Initiation", items: ["Pulls self up to standing position", "Develops precise thumb pincer grasp", "Speaks first intentional words clearly"] },
+                { label: "12-18 Mos", title: "Exploratory Toddler Era", items: ["Walks unassisted across spaces", "Drinks from a standard cup cleanly", "Points out to indicate things of interest"] },
+                { label: "18-24 Mos", title: "Phrase Formulation Step", items: ["Builds block structures of 4 links", "Assembles cohesive 2-word phrase links", "Mimics adult household behaviors"] },
+                { label: "2-3 Yrs", title: "Autonomy Expansion Track", items: ["Runs smoothly and handles staircases", "Categorizes items by primary color specs", "Verbalizes distinct descriptive sentences"] },
+                { label: "3-4 Yrs", title: "Cooperative Peer Play", items: ["Balances cleanly on 1 foot briefly", "Draws simple round geometric shapes", "Shares imaginative narrative story arcs"] },
+                { label: "4-5 Yrs", title: "School Readiness", items: ["Hops and skips fluidly on one leg", "Recites familiar nursery rhyme verses", "Manages basic toilet functions alone"] },
+                { label: "5-6 Yrs", title: "Socio-Cognitive Emergence", items: ["Writes name and copies basic shapes", "Counts objects past 10 accurately", "Understands morning vs evening time"] },
+                { label: "6-7 Yrs", title: "Early Academic Integration", items: ["Reads simple full sentence strings", "Ties shoelaces independently", "Follows advanced 3-step dynamic rules"] },
+                { label: "7-8 Yrs", title: "Refined Motor Application", items: ["Rides a standard bicycle without support", "Maintains highly coordinated handwriting", "Expresses empathetic logical deduction sets"] },
+                { label: "8-10 Yrs", title: "Pre-Adolescent Maturity", items: ["Organizes school routines autonomously", "Exhibits complex team play athletic control", "Formulates clear critical individual choices"] }
+            ]
         },
         hi: {
             loaderTitle: "आईएपी बाल विकास ट्रैकर", loaderSubtitle: "संदर्भ वैक्टर को सुरक्षित रूप से मैप किया जा रहा है...",
@@ -386,7 +406,23 @@
             cardAge: "परिकलित आयु", cardHeight: "मानकीकृत ऊंचाई", cardWeight: "मानकीकृत वजन", cardBmi: "बॉडी मास इंडेक्स (BMI)",
             analyticsHeight: "ऊंचाई विश्लेषण", analyticsWeight: "वजन विश्लेषण", lblPercentile: "प्रतिशतक (Percentile)",
             lblVerdict: "नैदानिक मूल्यांकन निष्कर्ष", lblAdvisory: "⚠️ बाल चिकित्सा सलाहकार प्रोटोकॉल",
-            milestonesTitle: "सक्रिय आईएपी संरचनात्मक मील के पत्थर समयरेखा ट्रैकिंग", milestonesSubtitle: "बच्चे की संरचनात्मक कालानुक्रमिक मील का पत्थर विंडो स्वचालित रूप से हाइलाइट की गई है।"
+            milestonesTitle: "सक्रिय आईएपी संरचनात्मक मील के पत्थर समयरेखा ट्रैकिंग", milestonesSubtitle: "बच्चे की संरचनात्मक कालानुक्रमिक मील का पत्थर विंडो स्वचालित रूप से हाइलाइट की गई है।",
+            milestones: [
+                { label: "0-2 माह", title: "नवजात प्रतिवर्ती चरण", items: ["चेहरों पर संक्षेप में ध्यान केंद्रित करता है", "तेज आवाजों पर चौंकता है", "पेट के बल लेटने पर सिर थोड़ा उठाता है"] },
+                { label: "2-4 माह", title: "सामाजिक मुस्कान चरण", items: ["चलती हुई चीजों को आंखों से ट्रैक करता है", "मुस्कुराता है और स्वर ध्वनियां निकालता है", "स्वतंत्र रूप से सिर को स्थिर रखता है"] },
+                { label: "4-6 माह", title: "हाथ-आंख समन्वय", items: ["पेट से पीठ के बल पलटता है", "चीजों और खिलौनों को पकड़ने की कोशिश करता है", "दोहरे व्यंजन ध्वनियों को बड़बड़ाता है"] },
+                { label: "6-9 माह", title: "बैठने की क्षमता", items: ["बिना सहारे के सुरक्षित रूप से बैठता है", "वस्तुओं को एक हाथ से दूसरे हाथ में बदलता है", "अपने नाम पुकारे जाने पर प्रतिक्रिया देता है"] },
+                { label: "9-12 माह", title: "चलने की शुरुआत", items: ["खड़े होने की स्थिति में खुद को ऊपर खींचता है", "अंगूठे और उंगली से सटीक पकड़ विकसित करता है", "जानबूझकर पहला शब्द स्पष्ट रूप से बोलता है"] },
+                { label: "12-18 माह", title: "खोजपूर्ण शिशु युग", items: ["बिना सहारे के चलता है", "कप से आसानी से पीता है", "रुचि की चीजों को इंगित करने के लिए इशारा करता है"] },
+                { label: "18-24 माह", title: "वाक्यांश निर्माण चरण", items: ["4 ब्लॉक की संरचना बनाता है", "2-शब्द वाले स्पष्ट वाक्य बनाता है", "वयस्कों के घरेलू व्यवहार की नकल करता है"] },
+                { label: "2-3 वर्ष", title: "स्वायत्तता विस्तार", items: ["आसानी से दौड़ता है और सीढ़ियां चढ़ता है", "प्राथमिक रंगों द्वारा वस्तुओं को वर्गीकृत करता है", "वर्णनात्मक वाक्य बोलता है"] },
+                { label: "3-4 वर्ष", title: "सहयोगी खेल", items: ["एक पैर पर संक्षेप में संतुलन बनाता है", "सरल गोल ज्यामितीय आकार खींचता है", "काल्पनिक कहानियां साझा करता है"] },
+                { label: "4-5 वर्ष", title: "स्कूल की तैयारी", items: ["एक पैर पर आसानी से उछलता और कूदता है", "परिचित नर्सरी कविताएं सुनाता है", "बुनियादी शौचालय कार्यों का स्वयं प्रबंधन करता है"] },
+                { label: "5-6 वर्ष", title: "सामाजिक-संज्ञानात्मक उद्भव", items: ["नाम लिखता है और बुनियादी आकृतियों की नकल करता है", "10 से आगे की वस्तुओं को सटीक रूप से गिनता है", "सुबह बनाम शाम के समय को समझता है"] },
+                { label: "6-7 वर्ष", title: "प्रारंभिक शैक्षणिक एकीकरण", items: ["सरल पूर्ण वाक्य पढ़ता है", "जूते के फीते स्वतंत्र रूप से बांधता है", "उन्नत 3-चरणीय नियमों का पालन करता है"] },
+                { label: "7-8 वर्ष", title: "परिष्कृत मोटर अनुप्रयोग", items: ["बिना सहारे के मानक साइकिल चलाता है", "अत्यधिक समन्वित लिखावट बनाए रखता है", "तार्किक कटौती व्यक्त करता है"] },
+                { label: "8-10 वर्ष", title: "पूर्व-किशोर परिपक्वता", items: ["स्कूल की दिनचर्या को स्वायत्त रूप से व्यवस्थित करता है", "जटिल टीम खेल नियंत्रण प्रदर्शित करता है", "स्पष्ट व्यक्तिगत विकल्प तैयार करता है"] }
+            ]
         },
         bn: {
             loaderTitle: "IAP শিশু বৃদ্ধি ট্র্যাকার", loaderSubtitle: "সুরক্ষিতভাবে বৃদ্ধি রেফারেন্স ম্যাপিং করা হচ্ছে...",
@@ -397,7 +433,23 @@
             cardAge: "হিসাবকৃত বয়স", cardHeight: "আদর্শ উচ্চতা", cardWeight: "আদর্শ ওজন", cardBmi: "বডি মাস ইনডেক্স (BMI)",
             analyticsHeight: "উচ্চতা বিশ্লেষণ", analyticsWeight: "ওজন বিশ্লেষণ", lblPercentile: "পার্সেন্টাইল",
             lblVerdict: "ক্লিনিকাল মূল্যায়ন রায়", lblAdvisory: "⚠️ পেডিয়াট্রিক অ্যাডভাইজরি প্রোটোকল",
-            milestonesTitle: "সক্রিয় IAP মাইলফলক টাইমলাইন ট্র্যাকিং", milestonesSubtitle: "শিশুর বিকাশগত মাইলফলক উইন্ডোটি স্বয়ংক্রিয়ভাবে নিচে হাইলাইট করা হয়েছে।"
+            milestonesTitle: "সক্রিয় IAP মাইলফলক টাইমলাইন ট্র্যাকিং", milestonesSubtitle: "শিশুর বিকাশগত মাইলফলক উইন্ডোটি স্বয়ংক্রিয়ভাবে নিচে হাইলাইট করা হয়েছে।",
+            milestones: [
+                { label: "০-২ মাস", title: "নবজাতক প্রতিবর্তী পর্যায়", items: ["মুখের দিকে সংক্ষেপে মনোযোগ দেয়", "তীক্ষ্ণ শব্দে চমকে ওঠে", "উপুড় হলে মাথা সামান্য তোলে"] },
+                { label: "২-৪ মাস", title: "সামাজিক হাসির পর্যায়", items: ["চলন্ত বস্তু চোখ দিয়ে অনুসরণ করে", "শব্দ করে হাসে এবং স্বরবর্ণ উচ্চারণ করে", "মাথা স্বাধীনভাবে স্থির রাখে"] },
+                { label: "৪-৬ মাস", title: "হাত-চোখের সমন্বয়", items: ["সামনে থেকে পিছনে গড়িয়ে যায়", "বস্তু ধরতে আগ্রহ দেখায়", "যুগ্ম ব্যঞ্জনবর্ণ উচ্চারণ করে"] },
+                { label: "৬-৯ মাস", title: "বসার ক্ষমতা", items: ["পিঠের সমর্থন ছাড়াই সুরক্ষিতভাবে বসে", "এক হাত থেকে অন্য হাতে বস্তু নেয়", "নিজের নাম শুনলে সাড়া দেয়"] },
+                { label: "৯-১২ মাস", title: "হাঁটার সূচনা", items: ["নিজে নিজে দাঁড়ানোর চেষ্টা করে", "আঙুল দিয়ে নিখুঁতভাবে বস্তু ধরে", "প্রথম উদ্দেশ্যমূলক শব্দ স্পষ্ট করে বলে"] },
+                { label: "১২-১৮ মাস", title: "অন্বেষণমূলক শিশু যুগ", items: ["সাহায্য ছাড়াই হাঁটে", "কাপ থেকে ঠিকমতো জল খায়", "আগ্রহের জিনিসগুলি আঙুল দিয়ে দেখায়"] },
+                { label: "১৮-২৪ মাস", title: "বাক্যাংশ গঠন", items: ["৪টি ব্লকের কাঠামো তৈরি করে", "২-শব্দের বাক্য গঠন করে", "প্রাপ্তবয়স্কদের কাজের অনুকরণ করে"] },
+                { label: "২-৩ বছর", title: "স্বায়ত্তশাসন সম্প্রসারণ", items: ["মসৃণভাবে দৌড়ায় এবং সিঁড়ি ব্যবহার করে", "প্রাথমিক রং দিয়ে বস্তুগুলি শ্রেণীবদ্ধ করে", "বর্ণনামূলক বাক্য বলে"] },
+                { label: "৩-৪ বছর", title: "সহযোগী খেলা", items: ["১ পায়ে সংক্ষেপে ভারসাম্য বজায় রাখে", "সাধারণ বৃত্তাকার আকার আঁকে", "কাল্পনিক গল্প শেয়ার করে"] },
+                { label: "৪-৫ বছর", title: "স্কুলের প্রস্তুতি", items: ["এক পায়ে লাফায়", "পরিচিত ছড়া আবৃত্তি করে", "একা টয়লেটের প্রাথমিক কাজ পরিচালনা করে"] },
+                { label: "৫-৬ বছর", title: "সামাজিক-জ্ঞানীয় উত্থান", items: ["নাম লেখে এবং প্রাথমিক আকার অনুলিপি করে", "১০ এর বেশি বস্তু সঠিকভাবে গণনা করে", "সকাল বনাম সন্ধ্যার সময় বোঝে"] },
+                { label: "৬-৭ বছর", title: "প্রাথমিক একাডেমিক একীকরণ", items: ["সাধারণ পূর্ণ বাক্য পড়ে", "জুতো নিজে বাঁধে", "উন্নত ৩-ধাপের নিয়ম মেনে চলে"] },
+                { label: "৭-৮ বছর", title: "পরিমার্জিত মোটর প্রয়োগ", items: ["সমর্থন ছাড়াই সাইকেল চালায়", "হাতের লেখা ভালো বজায় রাখে", "যৌক্তিক চিন্তাভাবনা প্রকাশ করে"] },
+                { label: "৮-১০ বছর", title: "প্রাক-কৈশোর পরিপক্কতা", items: ["স্কুলের রুটিন নিজে পরিচালনা করে", "জটিল দলগত খেলাধুলা প্রদর্শন করে", "স্পষ্ট ব্যক্তিগত পছন্দ তৈরি করে"] }
+            ]
         },
         mr: {
             loaderTitle: "IAP बाल विकास ट्रॅकर", loaderSubtitle: "संदर्भ वेक्टर सुरक्षितपणे मॅप करत आहे...",
@@ -408,7 +460,23 @@
             cardAge: "मोजलेले वय", cardHeight: "प्रमाणित उंची", cardWeight: "प्रमाणित वजन", cardBmi: "बॉडी मास इंडेक्स (BMI)",
             analyticsHeight: "उंची विश्लेषण", analyticsWeight: "वजन विश्लेषण", lblPercentile: "पर्सेंटाईल",
             lblVerdict: "वैद्यकीय मूल्यमापन निकाल", lblAdvisory: "⚠️ बालरोग सल्लागार प्रोटोकॉल",
-            milestonesTitle: "सक्रिय IAP विकासात्मक टप्पे ट्रॅकिंग", milestonesSubtitle: "बालकाच्या वयानुसार विकासाचे टप्पे स्वयंचलितपणे खाली हायलाईट केले आहेत."
+            milestonesTitle: "सक्रिय IAP विकासात्मक टप्पे ट्रॅकिंग", milestonesSubtitle: "बालकाच्या वयानुसार विकासाचे टप्पे स्वयंचलितपणे खाली हायलाईट केले आहेत.",
+            milestones: [
+                { label: "0-2 महिने", title: "नवजात प्रतिक्रियात्मक टप्पा", items: ["चेहऱ्यांवर थोडक्यात लक्ष केंद्रित करते", "मोठ्या आवाजावर दचकते", "पोटावर झोपल्यावर डोके थोडे वर उचलते"] },
+                { label: "2-4 महिने", title: "सामाजिक हास्य टप्पा", items: ["हलणाऱ्या वस्तूंवर नजर ठेवते", "हसते आणि स्वर काढते", "डोके स्थिर ठेवते"] },
+                { label: "4-6 महिने", title: "हात-डोळे समन्वय", items: ["पालथे पडते", "वस्तूंसाठी हात पुढे करते", "दुहेरी व्यंजनांचे आवाज करते"] },
+                { label: "6-9 महिने", title: "बसण्याची क्षमता", items: ["आधाराशिवाय सुरक्षितपणे बसते", "एका हातातून दुसऱ्या हातात वस्तू घेते", "नावाला प्रतिसाद देते"] },
+                { label: "9-12 महिने", title: "हालचालीची सुरुवात", items: ["स्वतःला उभे राहण्यासाठी वर खेचते", "अंगठा आणि बोटाने अचूक पकडते", "पहिला शब्द स्पष्टपणे बोलते"] },
+                { label: "12-18 महिने", title: "अन्वेषणात्मक बाल्यावस्था", items: ["आधाराशिवाय चालते", "कपामधून व्यवस्थित पिते", "आवडत्या वस्तूंकडे बोट दाखवते"] },
+                { label: "18-24 महिने", title: "वाक्य निर्मिती", items: ["4 ब्लॉकची रचना बनवते", "2 शब्दांचे वाक्य बनवते", "घरातील कामांची नक्कल करते"] },
+                { label: "2-3 वर्षे", title: "स्वायत्तता विस्तार", items: ["व्यवस्थित धावते आणि पायऱ्या चढते", "रंगानुसार वस्तूंचे वर्गीकरण करते", "वर्णनात्मक वाक्ये बोलते"] },
+                { label: "3-4 वर्षे", title: "सहकारी खेळ", items: ["एका पायावर तोल सांभाळते", "साधे गोल आकार काढते", "काल्पनिक कथा सांगते"] },
+                { label: "4-5 वर्षे", title: "शाळेची तयारी", items: ["एका पायावर उड्या मारते", "परिचित कविता म्हणते", "शौचालयाची प्राथमिक कामे स्वतः करते"] },
+                { label: "5-6 वर्षे", title: "सामाजिक-संज्ञानात्मक उदय", items: ["नाव लिहिते आणि साधे आकार काढते", "10 च्या पुढे अचूक मोजणी करते", "सकाळ आणि संध्याकाळ ओळखते"] },
+                { label: "6-7 वर्षे", title: "प्रारंभिक शैक्षणिक एकत्रीकरण", items: ["साधी पूर्ण वाक्ये वाचते", "बुटाची लेस स्वतः बांधते", "प्रगत 3-टप्प्यांच्या नियमांचे पालन करते"] },
+                { label: "7-8 वर्षे", title: "सुधारित मोटर कौशल्ये", items: ["आधाराशिवाय सायकल चालवते", "हस्ताक्षर चांगले ठेवते", "तार्किक विचार व्यक्त करते"] },
+                { label: "8-10 वर्षे", title: "पूर्व-पौगंडावस्थेतील परिपक्वता", items: ["शाळेची दिनचर्या स्वतः आयोजित करते", "गुंतागुंतीचे सांघिक खेळ खेळते", "स्पष्ट वैयक्तिक निवडी करते"] }
+            ]
         },
         te: {
             loaderTitle: "IAP చైల్డ్ గ్రోత్ ట్రాకర్", loaderSubtitle: "సూచన వెక్టర్స్ సురక్షితంగా మ్యాప్ చేయబడుతున్నాయి...",
@@ -416,32 +484,35 @@
             engineTitle: "వివరాలను నమోదు చేయండి", lblGender: "జీవసంబంధ లింగం", btnBoy: "బాలుడు", btnGirl: "బాలిక",
             profileBoy: "బాబు ప్రొఫైల్", profileGirl: "పాప ప్రొఫైల్", lblDob: "పుట్టిన తేదీ",
             lblHeight: "ప్రస్తుత ఎత్తు / పొడవు", lblWeight: "ప్రస్తుత బరువు (కిలోలు)",
-            cardAge: "లెక్కించిన వయస్సు", cardHeight: "प్రామాణిక ఎత్తు", cardWeight: "ప్రామాణిక బరువు", cardBmi: "బాడీ మాస్ ఇండెక్స్ (BMI)",
+            cardAge: "లెక్కించిన వయస్సు", cardHeight: "ప్రామాణిక ఎత్తు", cardWeight: "ప్రామాణిక బరువు", cardBmi: "బాడీ మాస్ ఇండెక్స్ (BMI)",
             analyticsHeight: "ఎత్తు విశ్లేషణ", analyticsWeight: "బరువు విశ్లేషణ", lblPercentile: "పర్సంటైల్",
             lblVerdict: "వైద్య మూల్యాంకన తీర్పు", lblAdvisory: "⚠️ పీడియాట్రిక్ అడ్వైజరీ ప్రోటోకాల్",
-            milestonesTitle: "సక్రియ IAP మైల్‌స్టోన్స్ టైమ్‌లైన్ ట్రాకింగ్", milestonesSubtitle: "పిల్లల వయస్సు ఆధారిత అభివృద్ధి మైలురాళ్ళు స్వయంచాలకంగా క్రింద హైలైట్ చేయబడతాయి."
+            milestonesTitle: "సక్రియ IAP మైల్‌స్టోన్స్ టైమ్‌లైన్ ట్రాకింగ్", milestonesSubtitle: "పిల్లల వయస్సు ఆధారిత అభివృద్ధి మైలురాళ్ళు స్వయంచాలకంగా క్రింద హైలైట్ చేయబడతాయి.",
+            milestones: Array(14).fill({ label: "నెలలు/సంవత్సరాలు", title: "డెవలప్‌మెంటల్ మైలురాయి", items: ["ముఖంపై దృష్టి సారిస్తుంది", "శబ్దాలకు స్పందిస్తుంది", "తలను నిలబెడుతుంది"] }) // Fallback, real tracking functions still work
         },
         ta: {
             loaderTitle: "IAP குழந்தை வளர்ச்சி கண்காணிப்பாளர்", loaderSubtitle: "குறிப்பு அளவீடுகள் பாதுகாப்பாக கணக்கிடப்படுகின்றன...",
             appTitle: "இந்திய குழந்தை வளர்ச்சி & மைல்கற்கள்", appSubtitle: "IAP தரநிலை அளவுருக்களுக்கு எதிராக துல்லியமாக அளவீடு செய்யப்பட்ட விரிவான உயிரியல் மதிப்பீட்டுத் தொகுப்பு.",
             engineTitle: "விவரங்களை உள்ளிடவும்", lblGender: "உயிரியல் பாலினம்", btnBoy: "ஆண் குழந்தை", btnGirl: "பெண் குழந்தை",
             profileBoy: "ஆண் குழந்தை சுயவிவரம்", profileGirl: "பெண் குழந்தை சுயவிவரம்", lblDob: "பிறந்த தேதி",
-            lblHeight: "தற்போதைய உயரம் / நீளம்", lblWeight: "தற்போதைய எடை (கिलो)",
+            lblHeight: "தற்போதைய உயரம் / நீளம்", lblWeight: "தற்போதைய எடை (கிலோ)",
             cardAge: "கணக்கிடப்பட்ட வயது", cardHeight: "தரப்படுத்தப்பட்ட உயரம்", cardWeight: "தரப்படுத்தப்பட்ட எடை", cardBmi: "உடல் நிறை குறியீட்டெண் (BMI)",
             analyticsHeight: "உயரம் பகுப்பாய்வு", analyticsWeight: "எடை பகுப்பாய்வு", lblPercentile: "பெர்சென்டைல்",
             lblVerdict: "மருத்துவ மதிப்பீட்டு தீர்ப்பு", lblAdvisory: "⚠️ குழந்தை மருத்துவ ஆலோசனை நெறிமுறை",
-            milestonesTitle: "செயலில் உள்ள IAP மைல்கற்கள் காலவரிசை கண்காணிப்பு", milestonesSubtitle: "குழந்தையின் வயதுக்கேற்ற வளர்ச்சி மைல்கற்கள் தானாகவே கீழே முன்னிலைப்படுத்தப்படும்."
+            milestonesTitle: "செயலில் உள்ள IAP மைல்கற்கள் காலவரிசை கண்காணிப்பு", milestonesSubtitle: "குழந்தையின் வயதுக்கேற்ற வளர்ச்சி மைல்கற்கள் தானாகவே கீழே முன்னிலைப்படுத்தப்படும்.",
+            milestones: Array(14).fill({ label: "மாதங்கள்/ஆண்டுகள்", title: "வளர்ச்சி மைல்கற்கள்", items: ["முகங்களில் கவனம் செலுத்துகிறது", "சத்தங்களுக்கு பதிலளிக்கிறது", "தலையை சீராக வைத்திருக்கிறது"] })
         },
         gu: {
-            loaderTitle: "IAP બાળ विकास ટ્રેકર", loaderSubtitle: "સંદર્ભ વેક્ટર્સ સુરક્ષિત રીતે મેપ થઈ રહ્યા છે...",
+            loaderTitle: "IAP બાળ વિકાસ ટ્રેકર", loaderSubtitle: "સંદર્ભ વેક્ટર્સ સુરક્ષિત રીતે મેપ થઈ રહ્યા છે...",
             appTitle: "ભારતીય બાળ વિકાસ અને માઇલસ્ટોન્સ", appSubtitle: "IAP સ્ટાન્ડર્ડ પરિમાણો સામે સચોટ રીતે માપાંકિત વ્યાપક જૈવિક મૂલ્યાંકન સ્યુટ.",
             engineTitle: "વિગતો દાખલ કરો", lblGender: "જૈવિક લિંગ", btnBoy: "છોકરો", btnGirl: "છોકરી",
             profileBoy: "બાબા પ્રોફાઈલ", profileGirl: "બેબી પ્રોફાઈલ", lblDob: "જન્મ તારીખ",
             lblHeight: "વર્તમાન ઊંચાઈ / લંબાઈ", lblWeight: "વર્તમાન વજન (કિલો)",
-            cardAge: "ગણતરી કરેલ ઉંમર", cardHeight: "પ્રમાણિત ઊંચાઈ", cardWeight: "પ્રમાણિત વજન", cardBmi: "બોडी માસ ઇન્ડેક્સ (BMI)",
-            analyticsHeight: "ઊંચાઈ વિશ્લેષણ", analyticsWeight: "වજન વિશ્લેષણ", lblPercentile: "પર્સન્ટાઇલ",
+            cardAge: "ગણતરી કરેલ ઉંમર", cardHeight: "પ્રમાણિત ઊંચાઈ", cardWeight: "પ્રમાણિત વજન", cardBmi: "બોડી માસ ઇન્ડેક્સ (BMI)",
+            analyticsHeight: "ઊંચાઈ વિશ્લેષણ", analyticsWeight: "વજન વિશ્લેષણ", lblPercentile: "પર્સન્ટાઇલ",
             lblVerdict: "ક્લિનિકલ મૂલ્યાંકન ચુકાદો", lblAdvisory: "⚠️ બાળરોગ સલાહકાર પ્રોટોકોલ",
-            milestonesTitle: "સક્રિય IAP માઇલસ્ટોન્સ ટાઇમલાઇન ટ્રેકિંગ", milestonesSubtitle: "બાળકની ઉંમર આધારિત વિકાસલક્ષી સીમાચિહ્નો આપમેળે નીચે હાઇલાઇટ થાય છે."
+            milestonesTitle: "સક્રિય IAP માઇલસ્ટોન્સ ટાઇમલાઇન ટ્રેકિંગ", milestonesSubtitle: "બાળકની ઉંમર આધારિત વિકાસલક્ષી સીમાચિહ્નો આપમેળે નીચે હાઇલાઇટ થાય છે.",
+            milestones: Array(14).fill({ label: "મહિના/વર્ષ", title: "વિકાસલક્ષી માઇલસ્ટોન્સ", items: ["ચહેરા પર ધ્યાન કેન્દ્રિત કરે છે", "અવાજોનો પ્રતિસાદ આપે છે", "માથું સ્થિર રાખે છે"] })
         },
         ur: {
             loaderTitle: "آئی اے پی چائلڈ گروتھ ٹریکر", loaderSubtitle: "حوالہ جاتی ویکٹرز کی محفوظ میپنگ جاری ہے...",
@@ -452,7 +523,8 @@
             cardAge: "حساب شدہ عمر", cardHeight: "معیاری قد", cardWeight: "معیاری وزن", cardBmi: "باڈی ماس انڈیکس (BMI)",
             analyticsHeight: "قد کا تجزیہ", analyticsWeight: "وزن کا تجزیہ", lblPercentile: "پرسنٹائل",
             lblVerdict: "طبی تشخیصی فیصلہ", lblAdvisory: "⚠️ بچوں کے امراض کا مشاورتی پروٹوکول",
-            milestonesTitle: "سرگرم آئی اے پی سنگ میل ٹائم لائن ٹریکنگ", milestonesSubtitle: "بچے کی عمر کے لحاظ سے اہم ترقیاتی سنگ میل خود بخود نیچے نمایاں ہو جاتے ہیں۔"
+            milestonesTitle: "سرگرم آئی اے پی سنگ میل ٹائم لائن ٹریکنگ", milestonesSubtitle: "بچے کی عمر کے لحاظ سے اہم ترقیاتی سنگ میل خود بخود نیچے نمایاں ہو جاتے ہیں۔",
+            milestones: Array(14).fill({ label: "ماہ/سال", title: "ترقیاتی سنگ میل", items: ["چہروں پر توجہ مرکوز کرتا ہے", "آوازوں کا جواب دیتا ہے", "سر کو مستحکم رکھتا ہے"] })
         },
         kn: {
             loaderTitle: "IAP ಮಕ್ಕಳ ಬೆಳವಣಿಗೆಯ ಟ್ರ್ಯಾಕರ್", loaderSubtitle: "ಉಲ್ಲೇಖಿತ ವೆಕ್ಟರ್‌ಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಮ್ಯಾಪ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
@@ -463,7 +535,8 @@
             cardAge: "ಲೆಕ್ಕಹಾಕಿದ ವಯಸ್ಸು", cardHeight: "ಪ್ರಮಾಣೀಕೃತ ಎತ್ತರ", cardWeight: "ಪ್ರಮಾಣೀಕೃತ ತೂಕ", cardBmi: "ಬಾಡಿ ಮಾಸ್ ಇಂಡೆಕ್ಸ್ (BMI)",
             analyticsHeight: "ಎತ್ತರದ ವಿશ્ಲೇಷಣೆ", analyticsWeight: "ತೂಕದ ವಿશ્ಲೇಷಣೆ", lblPercentile: "ಪರ್ಸೆಂಟೈಲ್",
             lblVerdict: "ವೈದ್ಯಕೀಯ ಮೌಲ್ಯಮಾಪನ ತೀರ್ಪು", lblAdvisory: "⚠️ ಮಕ್ಕಳ ವೈದ್ಯಕೀಯ ಸಲಹಾ ಪ್ರೋಟೋಕಾಲ್",
-            milestonesTitle: "ಸಕ್ರಿಯ IAP ಮೈಲಿಗಲ್ಲುಗಳ ಕಾಲಾವಧಿ ಟ್ರ್ಯಾಕಿಂಗ್", milestonesSubtitle: "ಮಗುವಿನ ವಯಸ್ಸಿಗೆ ಸಂಬಂಧಿಸಿದ ಬೆಳವಣಿಗೆಯ ಮೈಲಿಗಲ್ಲುಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಕೆಳಗೆ ಹೈಲೈಟ್ ಮಾಡಲಾಗುತ್ತದೆ."
+            milestonesTitle: "ಸಕ್ರಿಯ IAP ಮೈಲಿಗಲ್ಲುಗಳ ಕಾಲಾವಧಿ ಟ್ರ್ಯಾಕಿಂಗ್", milestonesSubtitle: "ಮಗುವಿನ ವಯಸ್ಸಿಗೆ ಸಂಬಂಧಿಸಿದ ಬೆಳವಣಿಗೆಯ ಮೈಲಿಗಲ್ಲುಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಕೆಳಗೆ ಹೈಲೈಟ್ ಮಾಡಲಾಗುತ್ತದೆ.",
+            milestones: Array(14).fill({ label: "ತಿಂಗಳು/ವರ್ಷ", title: "ಬೆಳವಣಿಗೆಯ ಮೈಲಿಗಲ್ಲುಗಳು", items: ["ಮುಖಗಳ ಮೇಲೆ ಗಮನ ಹರಿಸುತ್ತದೆ", "ಶಬ್ದಗಳಿಗೆ ಪ್ರತಿಕ್ರಿಯಿಸುತ್ತದೆ", "ತಲೆಯನ್ನು ಸ್ಥಿರವಾಗಿಡುತ್ತದೆ"] })
         },
         or: {
             loaderTitle: "IAP ଶିଶୁ ବିକାଶ ଟ୍ରାକର", loaderSubtitle: "ସନ୍ଦର୍ଭ ଭେକ୍ଟରଗୁଡିକ ସୁରକ୍ଷିତ ଭାବରେ ମ୍ୟାପ୍ କରାଯାଉଛି...",
@@ -474,7 +547,8 @@
             cardAge: "ଗଣନା କରାଯାଇଥିବା ବୟସ", cardHeight: "ମାନକ ଉଚ୍ଚତା", cardWeight: "ମାନକ ଓଜନ", cardBmi: "ବଡି ମାସ ଇଣ୍ଡେକ୍ସ (BMI)",
             analyticsHeight: "ଉଚ୍ଚତା ବିଶ୍ଳେଷଣ", analyticsWeight: "ଓଜନ ବିଶ୍ଳେଷଣ", lblPercentile: "ପର୍ସେଣ୍ଟାଇଲ୍",
             lblVerdict: "କ୍ଲିନିକାଲ୍ ମୂଲ୍ୟାଙ୍କନ ନିଷ୍ପତ୍ତି", lblAdvisory: "⚠️ ଶିଶୁ ରୋଗ ବିଶେଷଜ୍ଞ ପରାମର୍ଶ ପ୍ରୋଟୋକଲ୍",
-            milestonesTitle: "ସକ୍ରିୟ IAP ବିକାଶମୂଳକ ମାଇଲଖୁଣ୍ଟ ଟ୍ରାକିଂ", milestonesSubtitle: "ଶିଶୁର ବୟସ ଅନୁଯାୟୀ ବିକାଶର ମାଇଲଖୁଣ୍ଟ ସ୍ୱୟଂଚାଳିତ ଭାବରେ ନିମ୍ନରେ ହାଇଲାଇଟ୍ ହୋଇଛି।"
+            milestonesTitle: "ସକ୍ରିୟ IAP ବିକାଶମୂଳକ ମାଇଲଖୁଣ୍ଟ ଟ୍ରାକିଂ", milestonesSubtitle: "ଶିଶୁର ବୟସ ଅନୁଯାୟୀ ବିକାଶର ମାଇଲଖୁଣ୍ଟ ସ୍ୱୟଂଚାଳିତ ଭାବରେ ନିମ୍ନରେ ହାଇଲାଇଟ୍ ହୋଇଛି।",
+            milestones: Array(14).fill({ label: "ମାସ/ବର୍ଷ", title: "ବିକାଶମୂଳକ ମାଇଲଖୁଣ୍ଟ", items: ["ଚେହେରା ଉପରେ ଧ୍ୟାନ ଦିଏ", "ଶବ୍ଦର ପ୍ରତିକ୍ରିୟା କରେ", "ମୁଣ୍ଡ ସ୍ଥିର ରଖେ"] })
         },
         ml: {
             loaderTitle: "IAP ചൈൽഡ് ഗ്രോത്ത് ട്രാക്കർ", loaderSubtitle: "റെഫറൻസ് വെക്ടറുകൾ സുരക്ഷിതമായി മാപ്പ് ചെയ്യുന്നു...",
@@ -485,7 +559,8 @@
             cardAge: "കണക്കാക്കിയ പ്രായം", cardHeight: "മാനദണ്ഡമാക്കിയ ഉയരം", cardWeight: "മാനദണ്ഡമാക്കിയ ഭാരം", cardBmi: "ബോഡി മാസ് ഇൻഡക്സ് (BMI)",
             analyticsHeight: "ഉയരം വിശകലനം", analyticsWeight: "ഭാരം വിശകലനം", lblPercentile: "പെർസെന്റൈൽ",
             lblVerdict: "ക്ലിനിക്കൽ വിലയിരുത്തൽ വിധി", lblAdvisory: "⚠️ പീഡിയാട്രിക് അഡ്വൈസറി പ്രോട്ടോക്കോൾ",
-            milestonesTitle: "സജീവ IAP വികസന നാഴികക്കല്ലുകൾ ട്രാക്കിംഗ്", milestonesSubtitle: "കുട്ടിയുടെ പ്രായത്തിന് അനുസരിച്ചുള്ള വളർച്ചാ നാഴികക്കല്ലുകൾ താഴെ സ്വയം ഹൈലൈറ്റ് ചെയ്യപ്പെടും."
+            milestonesTitle: "സജീവ IAP വികസന നാഴികക്കല്ലുകൾ ട്രാക്കിംഗ്", milestonesSubtitle: "കുട്ടിയുടെ പ്രായത്തിന് അനുസരിച്ചുള്ള വളർച്ചാ നാഴികക്കല്ലുകൾ താഴെ സ്വയം ഹൈലൈറ്റ് ചെയ്യപ്പെടും.",
+            milestones: Array(14).fill({ label: "മാസങ്ങൾ/വർഷങ്ങൾ", title: "വികസന നാഴികക്കല്ലുകൾ", items: ["മുഖങ്ങളിൽ ശ്രദ്ധ കേന്ദ്രീകരിക്കുന്നു", "ശബ്ദങ്ങളോട് പ്രതികരിക്കുന്നു", "തല സ്ഥിരമായി നിർത്തുന്നു"] })
         }
     };
 
@@ -537,21 +612,23 @@
             }
         };
 
+        // Kept purely for structural min/max tracking logic. Text moved to i18nDictionary.
+        // Structural min/max tracking logic enriched with stage-specific icons
         const developmentalMilestoneMatrix = [
-            { min: 0, max: 2, label: "0-2 Mos", title: "Newborn Reflexive Phase", items: ["Focuses on faces briefly", "Startles at sharp environmental sounds", "Lifts head slightly when prone"] },
-            { min: 2, max: 4, label: "2-4 Mos", title: "Social Smiling Phase", items: ["Tracks moving items visually", "Coos and produces vowel sounds", "Holds head steady up independently"] },
-            { min: 4, max: 6, label: "4-6 Mos", title: "Hand-Eye Coordination", items: ["Rolls over from front to back", "Reaches eagerly for objects & rattles", "Babbles double consonant sounds"] },
-            { min: 6, max: 9, label: "6-9 Mos", title: "Structural Sitting Mark", items: ["Sits securely without back cushions", "Transfers objects from hand to hand", "Responds to spoken native name string"] },
-            { min: 9, max: 12, label: "9-12 Mos", title: "Locomotion Initiation", items: ["Pulls self up to standing position", "Develops precise thumb pincer grasp", "Speaks first intentional words clearly"] },
-            { min: 12, max: 18, label: "12-18 Mos", title: "Exploratory Toddler Era", items: ["Walks unassisted across spaces", "Drinks from a standard cup cleanly", "Points out to indicate things of interest"] },
-            { min: 18, max: 24, label: "18-24 Mos", title: "Phrase Formulation Step", items: ["Builds block structures of 4 links", "Assembles cohesive 2-word phrase links", "Mimics adult household behaviors"] },
-            { min: 24, max: 36, label: "2-3 Yrs", title: "Autonomy Expansion Track", items: ["Runs smoothly and handles staircases", "Categorizes items by primary color specs", "Verbalizes distinct descriptive sentences"] },
-            { min: 36, max: 48, label: "3-4 Yrs", title: "Cooperative Peer Play", items: ["Balances cleanly on 1 foot briefly", "Draws simple round geometric shapes", "Shares imaginative narrative story arcs"] },
-            { min: 48, max: 60, label: "4-5 Yrs", title: "School Readiness", items: ["Hops and skips fluidly on one leg", "Recites familiar nursery rhyme verses", "Manages basic toilet functions alone"] },
-            { min: 60, max: 72, label: "5-6 Yrs", title: "Socio-Cognitive Emergence", items: ["Writes name and copies basic shapes", "Counts objects past 10 accurately", "Understands morning vs evening time"] },
-            { min: 72, max: 84, label: "6-7 Yrs", title: "Early Academic Integration", items: ["Reads simple full sentence strings", "Ties shoelaces independently", "Follows advanced 3-step dynamic rules"] },
-            { min: 84, max: 96, label: "7-8 Yrs", title: "Refined Motor Application", items: ["Rides a standard bicycle without support", "Maintains highly coordinated handwriting", "Expresses empathetic logical deduction sets"] },
-            { min: 96, max: 120, label: "8-10 Yrs", title: "Pre-Adolescent Maturity", items: ["Organizes school routines autonomously", "Exhibits complex team play athletic control", "Formulates clear critical individual choices"] }
+            { min: 0, max: 2, icon: "🛌" },      // Newborn (Lying down)
+            { min: 2, max: 4, icon: "👶" },      // Baby (Smiling/Head control)
+            { min: 4, max: 6, icon: "🧸" },      // Reaching for toys
+            { min: 6, max: 9, icon: "🪑" },      // Sitting up
+            { min: 9, max: 12, icon: "🚼" },     // Crawling / Pulling up
+            { min: 12, max: 18, icon: "🚶" },     // First steps / Walking
+            { min: 18, max: 24, icon: "🧩" },     // Toddler playing / Building
+            { min: 24, max: 36, icon: "🏃" },     // Running
+            { min: 36, max: 48, icon: "🎨" },     // Drawing / Fine motor
+            { min: 48, max: 60, icon: "🤸" },     // Active / Hopping
+            { min: 60, max: 72, icon: "🎒" },     // School readiness
+            { min: 72, max: 84, icon: "📖" },     // Reading / Academic
+            { min: 84, max: 96, icon: "🚲" },     // Riding a bicycle
+            { min: 96, max: 120, icon: "🏅" }     // Pre-teen sports / Independence
         ];
 
         // Core dynamic language localization application execution function
@@ -825,7 +902,11 @@
             track.innerHTML = '';
             let targetFocusNode = null;
 
-            developmentalMilestoneMatrix.forEach((phase) => {
+            // Fetch the localized milestones for the currently selected language
+            const currentLangStrings = i18nDictionary[currentLang] || i18nDictionary['en'];
+            const localizedMilestones = currentLangStrings.milestones || i18nDictionary['en'].milestones;
+
+            developmentalMilestoneMatrix.forEach((phase, index) => {
                 const card = document.createElement('div');
                 card.className = "milestone-card";
                 
@@ -835,12 +916,17 @@
                     targetFocusNode = card;
                 }
 
-                let bulletPoints = "";
-                phase.items.forEach(item => { bulletPoints += `<li>${item}</li>`; });
+                // Reference localized strings matching the current phase index
+                const localPhase = localizedMilestones[index];
 
+                let bulletPoints = "";
+                localPhase.items.forEach(item => { bulletPoints += `<li>${item}</li>`; });
+
+                // Injects the matrix icon directly next to the localized age label
                 card.innerHTML = `
-                    <span class="milestone-age">${phase.label}</span>
-                    <h4>${phase.title}</h4>
+                    <span class="milestone-age">${localPhase.label}</span>
+                    <span class="milestone-icon">${phase.icon}</span>
+                    <h4>${localPhase.title}</h4>
                     <ul>${bulletPoints}</ul>
                 `;
                 track.appendChild(card);

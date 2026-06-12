@@ -6,6 +6,8 @@
     <title>Enterprise Wealth Architecture Blueprint</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="global.js" defer></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -898,5 +900,6 @@
         inputs.forEach(input => input.addEventListener('input', syncInputToState));
         window.onload = initSystem;
     </script>
+    <footer class="site-footer"></footer>
 </body>
 </html>

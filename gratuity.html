@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Descriptive Gratuity Calculator</title>
+    <link rel="stylesheet" href="global.css">
+    <script src="global.js" defer></script>
     <style>
         :root {
             --bg-app: #f8fafc;
@@ -53,7 +55,7 @@
 
         .calculator-container {
             width: 100%;
-            max-width: 1100px;
+            max-width: 1200px;
             background: var(--bg-card);
             border-radius: 20px;
             box-shadow: var(--shadow-lg);
@@ -62,6 +64,7 @@
             grid-template-columns: 1.1fr 0.9fr;
             overflow: hidden;
             transition: var(--transition);
+            margin: 0 auto;
         }
 
         @media (max-width: 900px) {
@@ -354,7 +357,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="roundMethod">Tenure Rounding Method</label>
+                    <label for="roundMethod">Tenure Rounding</label>
                     <select id="roundMethod">
                         <option value="auto">Standard Legal Rounding</option>
                         <option value="completed">Ignore Excess Months</option>
@@ -385,6 +388,8 @@
         </div>
     </div>
 </div>
+
+<footer class="site-footer"></footer>
 
 <script>
     const htmlEl = document.documentElement;
